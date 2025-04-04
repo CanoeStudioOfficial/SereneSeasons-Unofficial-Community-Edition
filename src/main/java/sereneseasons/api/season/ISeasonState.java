@@ -11,16 +11,13 @@ import sereneseasons.api.season.Season.SubSeason;
 
 public interface ISeasonState
 {
-
     /**
      * Get the duration of a single day. Normally this is
      * 24000 ticks.
      *
      * @return The duration in ticks
      */
-    default int getDayDuration() {
-        return 24000; // 默认值
-    }
+    int getDayDuration();
 
     /**
      * Get the duration of a single sub season.
