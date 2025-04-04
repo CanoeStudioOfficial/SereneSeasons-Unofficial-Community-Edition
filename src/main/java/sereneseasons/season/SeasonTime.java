@@ -12,6 +12,7 @@ import sereneseasons.api.config.SeasonsOption;
 import sereneseasons.api.config.SyncedConfig;
 import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.Season;
+import sereneseasons.handler.SeasonTimeHandler;
 
 public final class SeasonTime implements ISeasonState
 {
@@ -25,9 +26,12 @@ public final class SeasonTime implements ISeasonState
     }
 
     @Override
-    public int getDayDuration()
-    {
-        return SyncedConfig.getIntValue(SeasonsOption.DAY_DURATION);
+    public int getDayDuration() {
+        int duration = SeasonTimeHandler.getDayDuration(this.getSubSeason());
+        if (duration <= 0) {
+            duration = SyncedConfig.getIntValue(SeasonsOption.DAY_DURATION);
+        }
+        return duration;
     }
 
     @Override

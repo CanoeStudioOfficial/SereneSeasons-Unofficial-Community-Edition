@@ -16,6 +16,8 @@ import sereneseasons.api.season.ISeasonColorProvider;
 import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.config.BiomeConfig;
 import sereneseasons.handler.PacketHandler;
+import sereneseasons.handler.SeasonTimeHandler;
+import sereneseasons.handler.SleepHandler;
 import sereneseasons.handler.season.BirchColorHandler;
 import sereneseasons.handler.season.RandomUpdateHandler;
 import sereneseasons.handler.season.SeasonHandler;
@@ -30,6 +32,8 @@ public class ModHandlers
 
     public static void init()
     {
+        MinecraftForge.EVENT_BUS.register(new SeasonTimeHandler());
+        MinecraftForge.EVENT_BUS.register(new SleepHandler());
         PacketHandler.init();
 
         //Handlers for functionality related to seasons
