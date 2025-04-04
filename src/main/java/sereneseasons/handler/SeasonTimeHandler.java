@@ -9,12 +9,7 @@ import sereneseasons.season.SeasonTime;
 
 public class SeasonTimeHandler {
     private static final int TICKS_PER_DAY = 24000;
-    private static final float[] SEASON_SPEED = {
-            1.0F,  // SPRING
-            0.8F,  // SUMMER (时间流逝更慢)
-            1.0F,  // AUTUMN
-            1.2F   // WINTER (时间流逝更快)
-    };
+    private int counter;
 
     @SubscribeEvent
     public void onWorldTick(TickEvent.WorldTickEvent event) {
