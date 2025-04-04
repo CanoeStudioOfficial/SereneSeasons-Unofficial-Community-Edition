@@ -32,6 +32,7 @@ public class ModHandlers
 
     public static void init()
     {
+
         MinecraftForge.EVENT_BUS.register(new SeasonTimeHandler());
         MinecraftForge.EVENT_BUS.register(new SleepHandler());
         PacketHandler.init();

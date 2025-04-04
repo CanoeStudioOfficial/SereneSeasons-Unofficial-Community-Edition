@@ -1,8 +1,8 @@
 /*******************************************************************************
  * Copyright 2016, the Biomes O' Plenty Team
- * 
+ *
  * This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License.
- * 
+ *
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/.
  ******************************************************************************/
 package sereneseasons.season;
@@ -12,13 +12,12 @@ import sereneseasons.api.config.SeasonsOption;
 import sereneseasons.api.config.SyncedConfig;
 import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.Season;
-import sereneseasons.handler.SeasonTimeHandler;
 
 public final class SeasonTime implements ISeasonState
 {
     public static final SeasonTime ZERO = new SeasonTime(0);
     public final int time;
-    
+
     public SeasonTime(int time)
     {
         Preconditions.checkArgument(time >= 0, "Time cannot be negative!");
@@ -27,11 +26,7 @@ public final class SeasonTime implements ISeasonState
 
     @Override
     public int getDayDuration() {
-        int duration = SeasonTimeHandler.getDayDuration(this.getSubSeason());
-        if (duration <= 0) {
-            duration = SyncedConfig.getIntValue(SeasonsOption.DAY_DURATION);
-        }
-        return duration;
+        return SyncedConfig.getIntValue(SeasonsOption.DAY_DURATION);
     }
 
     @Override
@@ -51,9 +46,9 @@ public final class SeasonTime implements ISeasonState
     {
         return getSubSeasonDuration() * Season.SubSeason.VALUES.length;
     }
-    
+
     @Override
-    public int getSeasonCycleTicks() 
+    public int getSeasonCycleTicks()
     {
         return this.time;
     }

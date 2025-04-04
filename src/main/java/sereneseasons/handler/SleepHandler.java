@@ -14,43 +14,19 @@ public class SleepHandler {
     private static final int TICKS_PER_DAY = 24000;
 
     @SubscribeEvent
-    public void onPlayerSleep(PlayerSleepInBedEvent event) {
-        EntityPlayer player = event.getEntityPlayer();
-        World world = player.world;
-
-        if (!world.isRemote) {
-            long currentTime = world.getWorldTime() % TICKS_PER_DAY;
-            int dayDuration = SeasonTimeHandler.getDayDuration(SeasonHelper.getSeasonState(world).getSubSeason());
-            int nightStart = dayDuration;
-
-            // 只有在夜晚允许睡觉
-            if (currentTime < nightStart) {
-                event.setResult(Result.DENY);
-                return;
-            }
-
-            // 夏季需要更晚才能睡觉
-            if (SeasonHelper.getSeasonState(world).getSeason() == Season.SUMMER) {
-                if (currentTime < 13000) {
-                    event.setResult(Result.DENY);
-                }
-            }
-        }
-    }
-
-    @SubscribeEvent
     public void onPlayerWakeUp(PlayerWakeUpEvent event) {
         EntityPlayer player = event.getEntityPlayer();
         World world = player.world;
+        if (world.isRemote) return;
 
-        if (!world.isRemote) {
-            long currentTime = world.getWorldTime() % TICKS_PER_DAY;
-            int dayDuration = SeasonTimeHandler.getDayDuration(SeasonHelper.getSeasonState(world).getSubSeason());
+        Season season = SeasonHelper.getSeasonState(world).getSeason();
+        int dayDuration = SeasonTimeHandler.getDaytimeDuration(season);
+        long currentTime = world.getWorldTime() % TICKS_PER_DAY;
 
-            // 调整起床时间为对应季节的日出时间
-            if (currentTime > dayDuration) {
-                world.setWorldTime(world.getWorldTime() + (TICKS_PER_DAY - currentTime) + dayDuration);
-            }
+        // 对齐到当前季节的日出时间
+        if (currentTime > dayDuration) {
+            long timeAdjustment = TICKS_PER_DAY - currentTime + (dayDuration - 1000);
+            world.setWorldTime(world.getWorldTime() + timeAdjustment);
         }
     }
 }

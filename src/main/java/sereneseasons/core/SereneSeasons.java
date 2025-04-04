@@ -14,6 +14,8 @@ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import sereneseasons.Tags;
+import sereneseasons.api.config.SeasonsOption;
+import sereneseasons.api.config.SyncedConfig;
 import sereneseasons.command.SSCommand;
 import sereneseasons.init.ModBlocks;
 import sereneseasons.init.ModConfig;
@@ -40,6 +42,7 @@ public class SereneSeasons
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
+        SyncedConfig.addOption(SeasonsOption.DAY_DURATION, "24000");
         configDirectory = new File(event.getModConfigurationDirectory(), "sereneseasons");
 
         ModConfig.preInit(configDirectory);
