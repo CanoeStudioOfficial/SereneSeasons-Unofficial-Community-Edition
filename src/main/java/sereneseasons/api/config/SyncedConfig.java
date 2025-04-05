@@ -6,6 +6,9 @@ import java.util.Map;
 
 public class SyncedConfig
 {
+    public static float getFloatValue(ISyncedOption option) {
+        return Float.valueOf(getValue(option));
+    }
     public static Map<String, SyncedConfigEntry> optionsToSync = Maps.newHashMap();
 
     public static void addOption(ISyncedOption option, String defaultValue)
