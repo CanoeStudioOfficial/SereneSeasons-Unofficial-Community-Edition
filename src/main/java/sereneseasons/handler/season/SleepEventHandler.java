@@ -41,6 +41,12 @@ public class SleepEventHandler {
             world.setWorldTime(world.getWorldTime() + (sunrise - currentTime));
         }
 
+        if (season == Season.SUMMER) {
+            world.setWorldTime(world.getWorldTime() + 3000);
+        } else if (season == Season.WINTER) {
+            world.setWorldTime(world.getWorldTime() - 1000);
+        }
+
         // 清除玩家疲劳效果
         if (player.isPotionActive(FatigueHandler.FATIGUE_EFFECT)) {
             player.removePotionEffect(FatigueHandler.FATIGUE_EFFECT);
