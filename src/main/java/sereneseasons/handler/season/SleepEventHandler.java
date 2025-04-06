@@ -42,7 +42,7 @@ public class SleepEventHandler {
         }
 
         if (season == Season.SUMMER) {
-            world.setWorldTime(world.getWorldTime() + 3000);
+            world.setWorldTime(world.getWorldTime() + 2000);
         } else if (season == Season.WINTER) {
             world.setWorldTime(world.getWorldTime() - 1000);
         }
