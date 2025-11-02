@@ -7,6 +7,8 @@
  ******************************************************************************/
 package sereneseasons.handler.season;
 
+import java.util.Iterator;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockIce;
 import net.minecraft.init.Blocks;
@@ -24,8 +26,6 @@ import sereneseasons.config.BiomeConfig;
 import sereneseasons.config.SeasonsConfig;
 import sereneseasons.init.ModConfig;
 import sereneseasons.season.SeasonASMHelper;
-
-import java.util.Iterator;
 
 public class RandomUpdateHandler
 {

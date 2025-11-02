@@ -1,4 +1,4 @@
-package sereneseasons.proxy;
+package sereneseasons.core;
 
 import com.google.common.base.Preconditions;
 import net.minecraft.block.Block;
@@ -18,7 +18,6 @@ import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import sereneseasons.api.ISSBlock;
-import sereneseasons.core.SereneSeasons;
 import sereneseasons.util.inventory.CreativeTabSS;
 
 public class ClientProxy extends CommonProxy
@@ -114,15 +113,5 @@ public class ClientProxy extends CommonProxy
 
             return renderer;
         }
-    }
-
-    @Override
-    public void registerEventListeners() {
-        super.registerEventListeners();
-    }
-
-    @Override
-    public void registerPostEventListeners() {
-        super.registerPostEventListeners();
     }
 }

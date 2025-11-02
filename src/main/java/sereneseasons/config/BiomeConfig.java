@@ -12,10 +12,13 @@ import com.google.common.collect.Maps;
 import com.google.gson.reflect.TypeToken;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.Biome;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import sereneseasons.config.json.BiomeData;
+import sereneseasons.util.SeasonColourUtil;
 import sereneseasons.util.config.JsonUtil;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

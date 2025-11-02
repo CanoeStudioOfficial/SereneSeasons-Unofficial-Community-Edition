@@ -16,7 +16,11 @@ import sereneseasons.api.season.ISeasonColorProvider;
 import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.config.BiomeConfig;
 import sereneseasons.handler.PacketHandler;
-import sereneseasons.handler.season.*;
+import sereneseasons.handler.season.BirchColorHandler;
+import sereneseasons.handler.season.RandomUpdateHandler;
+import sereneseasons.handler.season.SeasonHandler;
+import sereneseasons.handler.season.SeasonSleepHandler;
+import sereneseasons.handler.season.SeasonalCropGrowthHandler;
 import sereneseasons.season.SeasonTime;
 import sereneseasons.util.SeasonColourUtil;
 

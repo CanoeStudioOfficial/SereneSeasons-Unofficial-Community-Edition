@@ -7,6 +7,8 @@
  ******************************************************************************/
 package sereneseasons.block;
 
+import java.util.Random;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
@@ -31,11 +33,10 @@ import sereneseasons.api.ISSBlock;
 import sereneseasons.api.SSBlocks;
 import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.config.SeasonsConfig;
+import sereneseasons.init.ModConfig;
 import sereneseasons.item.ItemSSBlock;
 import sereneseasons.season.SeasonTime;
 import sereneseasons.tileentity.TileEntitySeasonSensor;
-
-import java.util.Random;
 
 public class BlockSeasonSensor extends BlockContainer implements ISSBlock
 {

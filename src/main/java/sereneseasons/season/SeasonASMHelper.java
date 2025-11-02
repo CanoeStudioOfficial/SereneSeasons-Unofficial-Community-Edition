@@ -7,6 +7,8 @@
  ******************************************************************************/
 package sereneseasons.season;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.state.IBlockState;
@@ -23,8 +25,6 @@ import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.config.BiomeConfig;
 import sereneseasons.config.SeasonsConfig;
 import sereneseasons.init.ModConfig;
-
-import javax.annotation.Nullable;
 
 public class SeasonASMHelper
 {

@@ -1,5 +1,7 @@
 package sereneseasons.handler.season;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.block.BlockOldLeaf;
 import net.minecraft.block.BlockPlanks;
 import net.minecraft.block.state.IBlockState;
@@ -16,8 +18,6 @@ import sereneseasons.config.BiomeConfig;
 import sereneseasons.config.SeasonsConfig;
 import sereneseasons.init.ModConfig;
 import sereneseasons.season.SeasonTime;
-
-import javax.annotation.Nullable;
 
 public class BirchColorHandler
 {
