@@ -1,17 +1,16 @@
 package sereneseasons.util;
 
+import com.google.common.collect.ImmutableSet;
+import net.minecraft.block.Block;
+import net.minecraft.block.properties.IProperty;
+import net.minecraft.block.state.IBlockState;
+import sereneseasons.api.ISSBlock;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Stack;
-
-import com.google.common.collect.ImmutableSet;
-
-import net.minecraft.block.Block;
-import net.minecraft.block.properties.IProperty;
-import net.minecraft.block.state.IBlockState;
-import sereneseasons.api.ISSBlock;
 
 public class BlockStateUtils
 {
