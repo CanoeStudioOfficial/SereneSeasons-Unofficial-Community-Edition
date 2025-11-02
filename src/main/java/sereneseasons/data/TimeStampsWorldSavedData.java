@@ -6,7 +6,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.storage.MapStorage;
 import net.minecraft.world.storage.WorldSavedData;
-import serenetweaks.core.SereneTweaks;
+import sereneseasons.core.SereneSeasons;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +37,7 @@ public class TimeStampsWorldSavedData extends WorldSavedData{
         return timeStampMap.get(key);
     }
 
-    private static final String DATA_NAME = SereneTweaks.MODID + "_TimeStampData";
+    private static final String DATA_NAME = SereneSeasons.MOD_ID + "_TimeStampData";
 
     public TimeStampsWorldSavedData() {
         super(DATA_NAME);
