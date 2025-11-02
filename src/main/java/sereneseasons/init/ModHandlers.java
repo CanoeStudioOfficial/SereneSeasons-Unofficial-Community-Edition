@@ -23,18 +23,13 @@ import sereneseasons.handler.season.SeasonSleepHandler;
 import sereneseasons.handler.season.SeasonalCropGrowthHandler;
 import sereneseasons.season.SeasonTime;
 import sereneseasons.util.SeasonColourUtil;
-import sereneseasons.handler.season.DayNightHandler;
-import sereneseasons.handler.season.SleepEventHandler;
-import sereneseasons.handler.season.FatigueHandler;
+
 public class ModHandlers
 {
     private static final SeasonHandler SEASON_HANDLER = new SeasonHandler();
 
     public static void init()
     {
-        MinecraftForge.EVENT_BUS.register(new DayNightHandler());
-        MinecraftForge.EVENT_BUS.register(new SleepEventHandler());
-        MinecraftForge.EVENT_BUS.register(new FatigueHandler());
         PacketHandler.init();
 
         //Handlers for functionality related to seasons

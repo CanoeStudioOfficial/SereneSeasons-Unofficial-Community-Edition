@@ -12,12 +12,6 @@ import sereneseasons.api.season.Season.SubSeason;
 public interface ISeasonState
 {
     /**
-     * 获取当前季节的昼夜速度修正
-     */
-    default float getDayNightSpeedModifier() {
-        return 1.0F;
-    }
-    /**
      * Get the duration of a single day. Normally this is
      * 24000 ticks.
      *

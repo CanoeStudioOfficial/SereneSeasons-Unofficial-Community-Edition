@@ -12,7 +12,7 @@ import sereneseasons.api.config.SeasonsOption;
 import sereneseasons.api.config.SyncedConfig;
 import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.Season;
-import sereneseasons.handler.season.DayNightHandler;
+
 public final class SeasonTime implements ISeasonState
 {
     public static final SeasonTime ZERO = new SeasonTime(0);
@@ -23,13 +23,6 @@ public final class SeasonTime implements ISeasonState
         Preconditions.checkArgument(time >= 0, "Time cannot be negative!");
         this.time = time;
     }
-
-    @Override
-    public float getDayNightSpeedModifier() {
-        return DayNightHandler.getSeasonSpeed()[getSeason().ordinal()];
-    }
-
-
 
     @Override
     public int getDayDuration()
