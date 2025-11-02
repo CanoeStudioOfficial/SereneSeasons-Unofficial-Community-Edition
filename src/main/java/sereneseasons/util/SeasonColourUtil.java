@@ -8,21 +8,14 @@
 package sereneseasons.util;
 
 
-import com.google.common.collect.Lists;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.biome.Biome;
 import org.lwjgl.util.Color;
-
-import sereneseasons.api.config.SeasonsOption;
-import sereneseasons.api.config.SyncedConfig;
 import sereneseasons.api.season.ISeasonColorProvider;
 import sereneseasons.api.season.Season;
 import sereneseasons.config.BiomeConfig;
 import sereneseasons.config.SeasonsConfig;
 import sereneseasons.init.ModConfig;
-
-import java.util.List;
 
 public class SeasonColourUtil 
 {

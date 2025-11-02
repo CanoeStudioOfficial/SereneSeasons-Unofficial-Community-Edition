@@ -1,10 +1,5 @@
 package sereneseasons.core;
 
-import java.io.File;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -13,25 +8,27 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import sereneseasons.Tags;
 import sereneseasons.command.SSCommand;
-import sereneseasons.init.ModBlocks;
-import sereneseasons.init.ModConfig;
-import sereneseasons.init.ModFertility;
-import sereneseasons.init.ModHandlers;
-import sereneseasons.init.ModItems;
+import sereneseasons.init.*;
+import sereneseasons.proxy.CommonProxy;
 
-@Mod(modid = SereneSeasons.MOD_ID, version = SereneSeasons.MOD_VERSION, name = SereneSeasons.MOD_NAME, dependencies = "required-after:mixinbooter@[7.1,);")
+import java.io.File;
+
+import static com.sun.xml.internal.ws.spi.db.BindingContextFactory.LOGGER;
+
+@Mod(modid = Tags.MOD_ID, version = Tags.VERSION, name = Tags.MOD_NAME, dependencies = "required-after:mixinbooter@[7.1,);")
 public class SereneSeasons
 {
-    public static final String MOD_NAME = "Tranquil Seasons";
-    public static final String MOD_ID = "sereneseasons";
-    public static final String MOD_VERSION = Tags.VERSION;
+    public static final String NAME = Tags.MOD_NAME;
+    public static final String MOD_ID = Tags.MOD_ID;
 
     @Instance(MOD_ID)
     public static SereneSeasons instance;
 
-    @SidedProxy(clientSide = "sereneseasons.core.ClientProxy", serverSide = "sereneseasons.core.CommonProxy")
+    @SidedProxy(clientSide = "sereneseasons.proxy.ClientProxy", serverSide = "sereneseasons.proxy.CommonProxy")
     public static CommonProxy proxy;
 
     public static Logger logger = LogManager.getLogger(MOD_ID);
@@ -53,12 +50,15 @@ public class SereneSeasons
     @EventHandler
     public void init(FMLInitializationEvent event)
     {
+        proxy.registerEventListeners();
+        LOGGER.info(SereneSeasons.NAME + " is present, enjoy your winter wonderland!");
         ModConfig.init(configDirectory);
     }
 
     @EventHandler
     public void postInit(FMLPostInitializationEvent event)
     {
+        proxy.registerPostEventListeners();
     	ModFertility.init();
     	ModHandlers.postInit();
     }

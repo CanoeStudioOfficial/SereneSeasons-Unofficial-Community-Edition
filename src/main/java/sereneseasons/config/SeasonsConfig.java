@@ -7,11 +7,11 @@
  ******************************************************************************/
 package sereneseasons.config;
 
-import java.io.File;
-
 import sereneseasons.api.config.SeasonsOption;
 import sereneseasons.core.SereneSeasons;
 import sereneseasons.init.ModConfig;
+
+import java.io.File;
 
 public class SeasonsConfig extends ConfigHandler
 {

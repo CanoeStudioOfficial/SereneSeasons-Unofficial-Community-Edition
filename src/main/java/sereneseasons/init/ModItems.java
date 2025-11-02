@@ -8,7 +8,8 @@ import sereneseasons.core.SereneSeasons;
 import sereneseasons.item.ItemSeasonClock;
 import sereneseasons.util.inventory.CreativeTabSS;
 
-import static sereneseasons.api.SSItems.*;
+import static sereneseasons.api.SSItems.season_clock;
+import static sereneseasons.api.SSItems.ss_icon;
 
 public class ModItems
 {

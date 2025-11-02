@@ -1,11 +1,7 @@
 package sereneseasons.init;
 
-import static sereneseasons.api.SSBlocks.greenhouse_glass;
-import static sereneseasons.api.SSBlocks.season_sensors;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
@@ -21,6 +17,9 @@ import sereneseasons.core.SereneSeasons;
 import sereneseasons.tileentity.TileEntitySeasonSensor;
 import sereneseasons.util.BlockStateUtils;
 import sereneseasons.util.inventory.CreativeTabSS;
+
+import static sereneseasons.api.SSBlocks.greenhouse_glass;
+import static sereneseasons.api.SSBlocks.season_sensors;
 
 public class ModBlocks
 {

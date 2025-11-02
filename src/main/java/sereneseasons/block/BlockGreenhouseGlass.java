@@ -7,8 +7,6 @@
  ******************************************************************************/
 package sereneseasons.block;
 
-import java.util.Random;
-
 import net.minecraft.block.BlockBreakable;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -20,6 +18,8 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import sereneseasons.api.ISSBlock;
 import sereneseasons.item.ItemSSBlock;
+
+import java.util.Random;
 
 public class BlockGreenhouseGlass extends BlockBreakable implements ISSBlock
 {

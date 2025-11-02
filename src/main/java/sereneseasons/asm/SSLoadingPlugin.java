@@ -7,15 +7,15 @@
  ******************************************************************************/
 package sereneseasons.asm;
 
+import com.google.common.collect.ImmutableMap;
+import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import zone.rong.mixinbooter.IEarlyMixinLoader;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
-
-import com.google.common.collect.ImmutableMap;
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import zone.rong.mixinbooter.IEarlyMixinLoader;
 
 @IFMLLoadingPlugin.Name("SSLoadingPlugin")
 public class SSLoadingPlugin implements IFMLLoadingPlugin, IEarlyMixinLoader {

@@ -1,10 +1,6 @@
 package sereneseasons.init;
 
-import java.util.HashMap;
-import java.util.HashSet;
-
 import net.minecraft.block.Block;
-import net.minecraft.block.IGrowable;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
@@ -22,6 +18,9 @@ import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.config.BiomeConfig;
 import sereneseasons.config.FertilityConfig;
 import sereneseasons.config.SeasonsConfig;
+
+import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Constructs efficient data structures to process, store, and give access to data from the FertilityConfig file

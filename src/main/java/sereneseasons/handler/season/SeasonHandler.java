@@ -7,8 +7,6 @@
  ******************************************************************************/
 package sereneseasons.handler.season;
 
-import java.util.HashMap;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -32,6 +30,8 @@ import sereneseasons.network.message.MessageSyncSeasonCycle;
 import sereneseasons.season.SeasonASMHelper;
 import sereneseasons.season.SeasonSavedData;
 import sereneseasons.season.SeasonTime;
+
+import java.util.HashMap;
 
 public class SeasonHandler implements SeasonHelper.ISeasonDataProvider
 {
