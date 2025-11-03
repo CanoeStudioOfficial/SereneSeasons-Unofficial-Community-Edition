@@ -1,4 +1,4 @@
-commands.sereneseasons.usage=/sereneseasons <setseason> [args]
+commands.sereneseasons.usage=/sereneseasons <setseason|getseason> [args]
 commands.sereneseasons.setseason.success=Установить сезон на %s
 commands.sereneseasons.setseason.fail=Неверный сезон %s
 commands.sereneseasons.setseason.disabled=Сезоны в настоящее время отключены!

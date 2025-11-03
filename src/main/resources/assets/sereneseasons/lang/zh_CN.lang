@@ -1,4 +1,4 @@
-commands.sereneseasons.usage=/sereneseasons <setseason> [季节]
+commands.sereneseasons.usage=/sereneseasons <setseason|getseason> [季节]
 commands.sereneseasons.setseason.success=已将季节设置为：%s
 commands.sereneseasons.setseason.fail=无效的季节参数：%s
 commands.sereneseasons.setseason.disabled=季节变化当前已禁用！

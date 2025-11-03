@@ -1,4 +1,4 @@
-package sereneseasons.mixin.general;
+package sereneseasons.mixin.common;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -36,10 +36,13 @@ public abstract class WorldMixin {
 
     @Inject(
             method = "isRainingAt",
-            at = @At("HEAD"),
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/World;getBiome(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/world/biome/Biome;"
+            ),
             cancellable = true
     )
-    public void rewriteIsRainingAt(BlockPos position, CallbackInfoReturnable<Boolean> cir) {
+    public void injectIsRainingAt(BlockPos position, CallbackInfoReturnable<Boolean> cir) {
         World world = (World) (Object) this;
         ISeasonState seasonState = SeasonHelper.getSeasonState(world);
         cir.setReturnValue(SeasonASMHelper.isRainingAtInSeason(world, position, seasonState));

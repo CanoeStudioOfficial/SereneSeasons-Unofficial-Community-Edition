@@ -1,4 +1,4 @@
-commands.sereneseasons.usage=/sereneseasons <setseason> [args]
+commands.sereneseasons.usage=/sereneseasons <setseason|getseason> [args]
 commands.sereneseasons.setseason.success=Estación establecida a %s
 commands.sereneseasons.setseason.fail=Estación inválida %s
 commands.sereneseasons.setseason.disabled=Las estaciones se encuentran deshabilitadas!

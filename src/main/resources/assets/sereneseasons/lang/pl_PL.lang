@@ -1,4 +1,4 @@
-commands.sereneseasons.usage=/sereneseasons <setseason> [args]
+commands.sereneseasons.usage=/sereneseasons <setseason|getseason> [args]
 commands.sereneseasons.setseason.success=Ustawiono porę roku na %s
 commands.sereneseasons.setseason.fail=Nieprawidłowa pora roku %s
 commands.sereneseasons.setseason.disabled=Pory roku są obecnie wyłączone!

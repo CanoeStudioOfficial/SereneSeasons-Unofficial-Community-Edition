@@ -1,4 +1,4 @@
-commands.sereneseasons.usage=/sereneseasons <setseason> [arguments]
+commands.sereneseasons.usage=/sereneseasons <setseason|getseason> [arguments]
 commands.sereneseasons.setseason.success=La saison a été définie à %s
 commands.sereneseasons.setseason.fail=La saison %s est invalide
 commands.sereneseasons.setseason.disabled=Les saisons sont actuellement désactivées !
