@@ -57,7 +57,7 @@ public class SeasonASMHelper
         {
             return false;
         }
-        else if (biome.getDefaultTemperature() >= 0.15F && !ModConfig.seasons.generateSnowAndIce)
+        else if (biome.getDefaultTemperature() >= 0.15F && !ModConfig.seasons.generateSnow)
         {
         	return false;
         }
@@ -103,7 +103,7 @@ public class SeasonASMHelper
         {
             return false;
         }
-        else if (biome.getDefaultTemperature() >= 0.15F && !ModConfig.seasons.generateSnowAndIce)
+        else if (biome.getDefaultTemperature() >= 0.15F && !ModConfig.seasons.generateIce)
         {
         	return false;
         }

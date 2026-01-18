@@ -8,6 +8,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.client.resources.I18n;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
@@ -203,29 +204,29 @@ public class ModFertility
 			{
 				int mask = seedSeasons.get(name);
 				
-				event.getToolTip().add("Fertile Seasons:");
+				event.getToolTip().add(I18n.format("tooltip.sereneseasons.fertile_season"));
 				
 				if ((mask & 1) != 0 && (mask & 2) != 0 && (mask & 4) != 0 && (mask & 8) != 0)
 				{
-					event.getToolTip().add(TextFormatting.LIGHT_PURPLE + " Year-Round");
+					event.getToolTip().add(TextFormatting.LIGHT_PURPLE + I18n.format("tooltip.sereneseasons.season.all"));
 				}
 				else
 				{
 					if ((mask & 1) != 0)
 					{
-						event.getToolTip().add(TextFormatting.GREEN + " Spring");
+						event.getToolTip().add(TextFormatting.GREEN + I18n.format("tooltip.sereneseasons.season.spring"));
 					}
 					if ((mask & 2) != 0)
 					{
-						event.getToolTip().add(TextFormatting.YELLOW + " Summer");
+						event.getToolTip().add(TextFormatting.YELLOW + I18n.format("tooltip.sereneseasons.season.summer"));
 					}
 					if ((mask & 4) != 0)
 					{
-						event.getToolTip().add(TextFormatting.GOLD + " Autumn");
+						event.getToolTip().add(TextFormatting.GOLD + I18n.format("tooltip.sereneseasons.season.autumn"));
 					}
 					if ((mask & 8) != 0)
 					{
-						event.getToolTip().add(TextFormatting.AQUA + " Winter");
+						event.getToolTip().add(TextFormatting.AQUA + I18n.format("tooltip.sereneseasons.season.winter"));
 					}
 				}
 			}
