@@ -20,7 +20,8 @@ public class SeasonsConfig extends ConfigHandler
     public static final String AESTHETIC_SETTINGS = "Aesthetic Settings";
     public static final String DIMENSION_SETTINGS = "Dimension Settings";
 
-    public boolean generateSnowAndIce;
+    public boolean generateSnow;
+    public boolean generateIce;
     public boolean changeWeatherFrequency;
     
     public boolean changeGrassColour;
@@ -45,7 +46,8 @@ public class SeasonsConfig extends ConfigHandler
             addSyncedValue(SeasonsOption.PROGRESS_SEASON_WHILE_OFFLINE, true, TIME_SETTINGS, "If the season should progress on a server with no players online");
             addSyncedValue(SeasonsOption.ADVANCE_SEASON_WHILE_SLEEPING, true, TIME_SETTINGS, "If the season should progress if all players are sleeping");
 
-            generateSnowAndIce = config.getBoolean("Generate Snow and Ice", WEATHER_SETTINGS, true, "Generate snow and ice during the Winter season");
+            generateSnow = config.getBoolean("Generate Snow", WEATHER_SETTINGS, true, "Generate snow during the Winter season");
+            generateIce = config.getBoolean("Generate Ice", WEATHER_SETTINGS, true, "Generate ice during the Winter season");
             changeWeatherFrequency = config.getBoolean("Change Weather Frequency", WEATHER_SETTINGS, true, "Change the frequency of rain/snow/storms based on the season");
             
             // Client-only. The server shouldn't get to decide these.

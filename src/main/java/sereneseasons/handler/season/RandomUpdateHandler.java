@@ -73,7 +73,7 @@ public class RandomUpdateHandler
 					}
 				}
 
-				if (ModConfig.seasons.generateSnowAndIce && SeasonsConfig.isDimensionWhitelisted(event.world.provider.getDimension()))
+				if (SeasonsConfig.isDimensionWhitelisted(event.world.provider.getDimension()))
 				{
 					WorldServer world = (WorldServer)event.world;
 					for (Iterator<Chunk> iterator = world.getPersistentChunkIterable(world.getPlayerChunkMap().getChunkIterator()); iterator.hasNext();)
