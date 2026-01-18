@@ -14,3 +14,10 @@ tile.season_sensor_winter.name=Season Sensor
 item.ss_icon.name=SS Icon
 
 item.season_clock.name=Season Clock
+
+tooltip.sereneseasons.fertile_season=Fertile season:
+tooltip.sereneseasons.season.all=Year-Round
+tooltip.sereneseasons.season.spring=Spring
+tooltip.sereneseasons.season.summer=Summer
+tooltip.sereneseasons.season.autumn=Autumn
+tooltip.sereneseasons.season.winter=Winter
