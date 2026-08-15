@@ -3,6 +3,18 @@ commands.sereneseasons.setseason.success=Установить сезон на %s
 commands.sereneseasons.setseason.fail=Неверный сезон %s
 commands.sereneseasons.setseason.disabled=Сезоны в настоящее время отключены!
 commands.sereneseasons.getseason=Сейчас %s. Время до следующего сезона: %d дней, %d часов
+commands.sereneseasons.season.early_spring=Ранняя весна
+commands.sereneseasons.season.mid_spring=Середина весны
+commands.sereneseasons.season.late_spring=Поздняя весна
+commands.sereneseasons.season.early_summer=Раннее лето
+commands.sereneseasons.season.mid_summer=Середина лета
+commands.sereneseasons.season.late_summer=Позднее лето
+commands.sereneseasons.season.early_autumn=Ранняя осень
+commands.sereneseasons.season.mid_autumn=Середина осени
+commands.sereneseasons.season.late_autumn=Поздняя осень
+commands.sereneseasons.season.early_winter=Ранняя зима
+commands.sereneseasons.season.mid_winter=Середина зимы
+commands.sereneseasons.season.late_winter=Поздняя зима
 
 itemGroup.tabSereneSeasons=Serene Seasons
 

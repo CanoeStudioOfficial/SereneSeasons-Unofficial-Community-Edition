@@ -2,6 +2,19 @@ commands.sereneseasons.usage=/sereneseasons <setseason|getseason> [季节]
 commands.sereneseasons.setseason.success=已将季节设置为：%s
 commands.sereneseasons.setseason.fail=无效的季节参数：%s
 commands.sereneseasons.setseason.disabled=季节变化当前已禁用！
+commands.sereneseasons.getseason=当前为%s，距离下一季节还有：%d天，%d小时
+commands.sereneseasons.season.early_spring=早春
+commands.sereneseasons.season.mid_spring=仲春
+commands.sereneseasons.season.late_spring=晚春
+commands.sereneseasons.season.early_summer=早夏
+commands.sereneseasons.season.mid_summer=仲夏
+commands.sereneseasons.season.late_summer=晚夏
+commands.sereneseasons.season.early_autumn=早秋
+commands.sereneseasons.season.mid_autumn=仲秋
+commands.sereneseasons.season.late_autumn=晚秋
+commands.sereneseasons.season.early_winter=早冬
+commands.sereneseasons.season.mid_winter=仲冬
+commands.sereneseasons.season.late_winter=晚冬
 
 itemGroup.tabSereneSeasons=静谧四季
 
@@ -13,3 +26,10 @@ tile.season_sensor_winter.name=季节传感器（冬）
 item.ss_icon.name=静谧四季图标
 
 item.season_clock.name=季节指示仪
+
+tooltip.sereneseasons.fertile_season=适宜季节：
+tooltip.sereneseasons.season.all=全年
+tooltip.sereneseasons.season.spring=春季
+tooltip.sereneseasons.season.summer=夏季
+tooltip.sereneseasons.season.autumn=秋季
+tooltip.sereneseasons.season.winter=冬季

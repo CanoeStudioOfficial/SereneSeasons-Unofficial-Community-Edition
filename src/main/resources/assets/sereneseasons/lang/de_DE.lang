@@ -1,6 +1,20 @@
+commands.sereneseasons.usage=/sereneseasons <setseason|getseason> [args]
 commands.sereneseasons.setseason.success=Jahreszeit auf %s gesetzt
 commands.sereneseasons.setseason.fail=Ungültige Jahreszeit %s
 commands.sereneseasons.setseason.disabled=Jahreszeiten sind aktuell deaktiviert!
+commands.sereneseasons.getseason=Es ist %s. Zeit bis zur nächsten Jahreszeit: %d Tage, %d Stunden
+commands.sereneseasons.season.early_spring=Frühlingsanfang
+commands.sereneseasons.season.mid_spring=Mitte des Frühlings
+commands.sereneseasons.season.late_spring=Spätfrühling
+commands.sereneseasons.season.early_summer=Sommeranfang
+commands.sereneseasons.season.mid_summer=Hochsommer
+commands.sereneseasons.season.late_summer=Spätsommer
+commands.sereneseasons.season.early_autumn=Herbstanfang
+commands.sereneseasons.season.mid_autumn=Mitte des Herbstes
+commands.sereneseasons.season.late_autumn=Spätherbst
+commands.sereneseasons.season.early_winter=Winteranfang
+commands.sereneseasons.season.mid_winter=Mitte des Winters
+commands.sereneseasons.season.late_winter=Spätwinter
 
 itemGroup.tabSereneSeasons=Serene Seasons
 
@@ -12,3 +26,10 @@ tile.season_sensor_winter.name=Jahreszeitensensor
 item.ss_icon.name=SS-Icon
 
 item.season_clock.name=Jahreszeitenuhr
+
+tooltip.sereneseasons.fertile_season=Fruchtbare Jahreszeit:
+tooltip.sereneseasons.season.all=Das ganze Jahr
+tooltip.sereneseasons.season.spring=Frühling
+tooltip.sereneseasons.season.summer=Sommer
+tooltip.sereneseasons.season.autumn=Herbst
+tooltip.sereneseasons.season.winter=Winter

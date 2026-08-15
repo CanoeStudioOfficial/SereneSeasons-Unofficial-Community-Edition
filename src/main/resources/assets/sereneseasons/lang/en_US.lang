@@ -3,6 +3,18 @@ commands.sereneseasons.setseason.success=Set season to %s
 commands.sereneseasons.setseason.fail=Invalid season %s
 commands.sereneseasons.setseason.disabled=Seasons are currently disabled!
 commands.sereneseasons.getseason=It is %s. Time until next Season: %d days, %d hours
+commands.sereneseasons.season.early_spring=Early Spring
+commands.sereneseasons.season.mid_spring=Mid Spring
+commands.sereneseasons.season.late_spring=Late Spring
+commands.sereneseasons.season.early_summer=Early Summer
+commands.sereneseasons.season.mid_summer=Mid Summer
+commands.sereneseasons.season.late_summer=Late Summer
+commands.sereneseasons.season.early_autumn=Early Autumn
+commands.sereneseasons.season.mid_autumn=Mid Autumn
+commands.sereneseasons.season.late_autumn=Late Autumn
+commands.sereneseasons.season.early_winter=Early Winter
+commands.sereneseasons.season.mid_winter=Mid Winter
+commands.sereneseasons.season.late_winter=Late Winter
 
 itemGroup.tabSereneSeasons=Serene Seasons
 

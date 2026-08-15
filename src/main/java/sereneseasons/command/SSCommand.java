@@ -9,6 +9,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import org.apache.commons.lang3.ArrayUtils;
 import sereneseasons.api.season.Season;
@@ -84,7 +85,7 @@ public class SSCommand extends CommandBase
         int ticksTillNext = subSeasonDuration * (index + 1) - seasonCycleTicks;
         int days = ticksTillNext / ticksPerSecond / 60 / 60 / 24;
         int hours = (ticksTillNext - (days * ticksPerSecond * 60 * 60 * 24)) / ticksPerSecond / 60 / 60;
-        sender.sendMessage(new TextComponentTranslation("commands.sereneseasons.getseason", season, days, hours));
+        sender.sendMessage(new TextComponentTranslation("commands.sereneseasons.getseason", getSeasonName(season), days, hours));
     }
 
     private void setSeason(ICommandSender sender, String[] args) throws CommandException
@@ -107,12 +108,17 @@ public class SSCommand extends CommandBase
             seasonData.seasonCycleTicks = SeasonTime.ZERO.getSubSeasonDuration() * newSeason.ordinal();
             seasonData.markDirty();
             SeasonHandler.sendSeasonUpdate(player.world);
-            sender.sendMessage(new TextComponentTranslation("commands.sereneseasons.setseason.success", args[1]));
+            sender.sendMessage(new TextComponentTranslation("commands.sereneseasons.setseason.success", getSeasonName(newSeason)));
         }
         else
         {
             sender.sendMessage(new TextComponentTranslation("commands.sereneseasons.setseason.fail", args[1]));
         }
+    }
+
+    private ITextComponent getSeasonName(SubSeason season)
+    {
+        return new TextComponentTranslation(season.getTranslationKey());
     }
 
     @Override

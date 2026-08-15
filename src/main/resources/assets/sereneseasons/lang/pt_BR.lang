@@ -2,6 +2,19 @@ commands.sereneseasons.usage=/sereneseasons <setseason|getseason> [argumentos]
 commands.sereneseasons.setseason.success=Estação do ano alterada para %s
 commands.sereneseasons.setseason.fail=A estação "%s" é inválida
 commands.sereneseasons.setseason.disabled=As estações do ano estão desativadas!
+commands.sereneseasons.getseason=É %s. Tempo até a próxima estação: %d dias, %d horas
+commands.sereneseasons.season.early_spring=Início da primavera
+commands.sereneseasons.season.mid_spring=Meio da primavera
+commands.sereneseasons.season.late_spring=Fim da primavera
+commands.sereneseasons.season.early_summer=Início do verão
+commands.sereneseasons.season.mid_summer=Meio do verão
+commands.sereneseasons.season.late_summer=Fim do verão
+commands.sereneseasons.season.early_autumn=Início do outono
+commands.sereneseasons.season.mid_autumn=Meio do outono
+commands.sereneseasons.season.late_autumn=Fim do outono
+commands.sereneseasons.season.early_winter=Início do inverno
+commands.sereneseasons.season.mid_winter=Meio do inverno
+commands.sereneseasons.season.late_winter=Fim do inverno
 
 itemGroup.tabSereneSeasons=Serene Seasons
 
@@ -13,3 +26,10 @@ tile.season_sensor_winter.name=Sensor de estações do ano
 item.ss_icon.name=Ícone do SS
 
 item.season_clock.name=Relógio de estações do ano
+
+tooltip.sereneseasons.fertile_season=Estação fértil:
+tooltip.sereneseasons.season.all=O ano todo
+tooltip.sereneseasons.season.spring=Primavera
+tooltip.sereneseasons.season.summer=Verão
+tooltip.sereneseasons.season.autumn=Outono
+tooltip.sereneseasons.season.winter=Inverno

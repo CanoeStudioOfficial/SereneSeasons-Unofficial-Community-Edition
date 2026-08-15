@@ -2,6 +2,19 @@ commands.sereneseasons.usage=/sereneseasons <setseason|getseason> [args]
 commands.sereneseasons.setseason.success=Ustawiono porę roku na %s
 commands.sereneseasons.setseason.fail=Nieprawidłowa pora roku %s
 commands.sereneseasons.setseason.disabled=Pory roku są obecnie wyłączone!
+commands.sereneseasons.getseason=Jest %s. Czas do następnej pory roku: %d dni, %d godzin
+commands.sereneseasons.season.early_spring=Początek wiosny
+commands.sereneseasons.season.mid_spring=Środek wiosny
+commands.sereneseasons.season.late_spring=Koniec wiosny
+commands.sereneseasons.season.early_summer=Początek lata
+commands.sereneseasons.season.mid_summer=Środek lata
+commands.sereneseasons.season.late_summer=Koniec lata
+commands.sereneseasons.season.early_autumn=Początek jesieni
+commands.sereneseasons.season.mid_autumn=Środek jesieni
+commands.sereneseasons.season.late_autumn=Koniec jesieni
+commands.sereneseasons.season.early_winter=Początek zimy
+commands.sereneseasons.season.mid_winter=Środek zimy
+commands.sereneseasons.season.late_winter=Koniec zimy
 
 itemGroup.tabSereneSeasons=Serene Seasons
 
@@ -12,4 +25,11 @@ tile.season_sensor_autumn.name=Jesienny Czujnik
 tile.season_sensor_winter.name=Zimowy Czujnik
 item.ss_icon.name=SS Icon
 
-item.season_clock.name=egar Pór Roku
+item.season_clock.name=Zegar Pór Roku
+
+tooltip.sereneseasons.fertile_season=Żyzna pora roku:
+tooltip.sereneseasons.season.all=Cały rok
+tooltip.sereneseasons.season.spring=Wiosna
+tooltip.sereneseasons.season.summer=Lato
+tooltip.sereneseasons.season.autumn=Jesień
+tooltip.sereneseasons.season.winter=Zima

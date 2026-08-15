@@ -7,6 +7,8 @@
  ******************************************************************************/
 package sereneseasons.api.season;
 
+import java.util.Locale;
+
 public enum Season 
 {
     SPRING, SUMMER, AUTUMN, WINTER;
@@ -53,6 +55,11 @@ public enum Season
         public Season getSeason()
         {
             return this.season;
+        }
+
+        public String getTranslationKey()
+        {
+            return "commands.sereneseasons.season." + this.name().toLowerCase(Locale.ROOT);
         }
         
         public int getGrassOverlay()
