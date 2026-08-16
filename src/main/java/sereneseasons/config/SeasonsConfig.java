@@ -45,6 +45,7 @@ public class SeasonsConfig extends ConfigHandler
             addSyncedValue(SeasonsOption.STARTING_SUB_SEASON, 5, TIME_SETTINGS, "The starting sub season for new worlds.  0 = Random, 1 - 3 = Early/Mid/Late Spring, 4 - 6 = Early/Mid/Late Summer, 7 - 9 = Early/Mid/Late Autumn, 10 - 12 = Early/Mid/Late Winter", 0, 12);
             addSyncedValue(SeasonsOption.PROGRESS_SEASON_WHILE_OFFLINE, true, TIME_SETTINGS, "If the season should progress on a server with no players online");
             addSyncedValue(SeasonsOption.ADVANCE_SEASON_WHILE_SLEEPING, true, TIME_SETTINGS, "If the season should progress if all players are sleeping");
+            addSyncedValue(SeasonsOption.CHANGE_DAYLIGHT_WITH_SEASONS, true, TIME_SETTINGS, "If sunrise, sunset and seasonal sky brightness should change with the season");
 
             generateSnow = config.getBoolean("Generate Snow", WEATHER_SETTINGS, true, "Generate snow during the Winter season");
             generateIce = config.getBoolean("Generate Ice", WEATHER_SETTINGS, true, "Generate ice during the Winter season");

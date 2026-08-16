@@ -9,9 +9,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.season.SeasonASMHelper;
+import sereneseasons.season.SeasonalCelestialAngle;
 
 @Mixin(World.class)
 public abstract class WorldMixin {
+    @Inject(
+            method = "getCelestialAngle",
+            at = @At("HEAD"),
+            cancellable = true
+    )
+    public void injectSeasonalCelestialAngle(float partialTicks, CallbackInfoReturnable<Float> cir) {
+        World world = (World) (Object) this;
+        cir.setReturnValue(SeasonalCelestialAngle.calculate(world, world.getWorldTime(), partialTicks));
+    }
+
     @Inject(
             method = "canSnowAt",
             at = @At("HEAD"),

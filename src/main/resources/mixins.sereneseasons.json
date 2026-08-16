@@ -10,6 +10,7 @@
 	],
 	"server": [],
 	"client": [
-		"client.EntityRendererMixin"
+		"client.EntityRendererMixin",
+		"client.WorldMixin"
 	]
 }

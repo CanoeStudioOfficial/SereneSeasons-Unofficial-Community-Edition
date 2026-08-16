@@ -13,7 +13,8 @@ public enum SeasonsOption implements ISyncedOption
     SUB_SEASON_DURATION("Sub Season Duration"),
     STARTING_SUB_SEASON("Starting Sub Season"),
     PROGRESS_SEASON_WHILE_OFFLINE("Progress Season While Offline"),
-    ADVANCE_SEASON_WHILE_SLEEPING("Skip time with Sleeping");
+    ADVANCE_SEASON_WHILE_SLEEPING("Skip time with Sleeping"),
+    CHANGE_DAYLIGHT_WITH_SEASONS("Change Daylight with Seasons");
     
     private final String optionName;
 

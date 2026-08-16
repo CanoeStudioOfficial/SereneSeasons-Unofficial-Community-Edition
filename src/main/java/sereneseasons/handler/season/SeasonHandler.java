@@ -9,6 +9,7 @@ package sereneseasons.handler.season;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
@@ -51,7 +52,7 @@ public class SeasonHandler implements SeasonHelper.ISeasonDataProvider
                 
             SeasonSavedData savedData = getSeasonSavedData(world);
 
-            if (savedData.seasonCycleTicks++ > SeasonTime.ZERO.getCycleDuration())
+            if (++savedData.seasonCycleTicks >= SeasonTime.ZERO.getCycleDuration())
             {
                 savedData.seasonCycleTicks = 0;
             }
@@ -70,15 +71,24 @@ public class SeasonHandler implements SeasonHelper.ISeasonDataProvider
     {
         EntityPlayer player = event.player;
         World world = player.world;
-        
-        sendSeasonUpdate(world);
+
+        if (!world.isRemote && player instanceof EntityPlayerMP)
+        {
+            PacketHandler.sendSyncedConfigs((EntityPlayerMP) player);
+            sendSeasonUpdate(world);
+        }
     }
 
     private Season.SubSeason lastSeason = null;
     public static final HashMap<Integer, Integer> clientSeasonCycleTicks = new HashMap<>();
+    private static int getClientDimension()
+    {
+        return Minecraft.getMinecraft().player == null ? 0 : Minecraft.getMinecraft().player.dimension;
+    }
+
     public static SeasonTime getClientSeasonTime() {
-        Integer i = clientSeasonCycleTicks.get(0);
-    	return new SeasonTime(i == null ? 0 : i);
+        Integer i = clientSeasonCycleTicks.get(getClientDimension());
+        return new SeasonTime(i == null ? 0 : i);
     }
     
     @SubscribeEvent
@@ -94,7 +104,7 @@ public class SeasonHandler implements SeasonHelper.ISeasonDataProvider
             clientSeasonCycleTicks.compute(dimension, (k, v) -> v == null ? 0 : v + 1);
         	
             //Keep ticking as we're synchronized with the server only every second
-            if (clientSeasonCycleTicks.get(dimension) > SeasonTime.ZERO.getCycleDuration())
+            if (clientSeasonCycleTicks.get(dimension) >= SeasonTime.ZERO.getCycleDuration())
             {
                 clientSeasonCycleTicks.put(dimension, 0);
             }
@@ -112,7 +122,7 @@ public class SeasonHandler implements SeasonHelper.ISeasonDataProvider
     @SubscribeEvent
     public void onPopulateChunk(PopulateChunkEvent.Populate event)
     {
-        if (!event.getWorld().isRemote && event.getType() != PopulateChunkEvent.Populate.EventType.ICE || !SeasonsConfig.isDimensionWhitelisted(event.getWorld().provider.getDimension()))
+        if (event.getWorld().isRemote || event.getType() != PopulateChunkEvent.Populate.EventType.ICE || !SeasonsConfig.isDimensionWhitelisted(event.getWorld().provider.getDimension()))
             return;
 
         event.setResult(Event.Result.DENY);
@@ -187,7 +197,7 @@ public class SeasonHandler implements SeasonHelper.ISeasonDataProvider
     
     public ISeasonState getClientSeasonState()
     {
-        Integer i = clientSeasonCycleTicks.get(0);
-    	return new SeasonTime(i == null ? 0 : i);
+        Integer i = clientSeasonCycleTicks.get(getClientDimension());
+        return new SeasonTime(i == null ? 0 : i);
     }
 }
