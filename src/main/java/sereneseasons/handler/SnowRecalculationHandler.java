@@ -21,12 +21,21 @@ import sereneseasons.data.TimeStampsWorldSavedData;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SnowRecalculationHandler {
 
     // OPTIMIZATION: Replaced ArrayList with ArrayDeque. 
     // ArrayList.remove(int) is O(N) and shifts elements, causing lag. ArrayDeque is O(1) for queues.
     private static final Deque<Chunk> recalculationQueue = new ArrayDeque<>();
+    
+    // Track last known chunk position of each player
+    private static final Map<String, Long> playerLastChunkPos = new HashMap<>();
+    
+    // Cooldown to avoid spamming recalculation
+    private static int recalculationCooldown = 0;
+    private static final int RECALCULATION_INTERVAL = 200; // Check every 10 seconds
 
     @SubscribeEvent
     public void onTick(TickEvent.WorldTickEvent event) {
@@ -38,6 +47,17 @@ public class SnowRecalculationHandler {
         World world = event.world;
         if (world.isRemote || world.provider.getDimension() != 0) {
             return;
+        }
+        
+        if (!FertilityConfig.general_category.shouldRecalculateSnow) {
+            return;
+        }
+        
+        // Check for player movement every 10 seconds
+        recalculationCooldown--;
+        if (recalculationCooldown <= 0) {
+            recalculationCooldown = RECALCULATION_INTERVAL;
+            checkPlayerMovement(world);
         }
         
         if (recalculationQueue.isEmpty()) {
@@ -61,11 +81,69 @@ public class SnowRecalculationHandler {
             
             if (success) {
                 processed++;
-                // BUG FIX: Update timestamp ONLY when successfully processed.
+                // BUG FIX: Update timestamp ONLY when successfully processed
                 TimeStampsWorldSavedData.setChunkTimeStamp(chunk, currentTime);
             } else {
                 // If it failed, put it back at the end of the queue to retry later
                 recalculationQueue.offer(chunk);
+            }
+        }
+    }
+    
+    /**
+     * Detect when players move to new areas and force recalculation
+     */
+    private void checkPlayerMovement(World world) {
+        int currentTime = (int) (System.currentTimeMillis() / 1000 / 60);
+        
+        for (EntityPlayer player : world.playerEntities) {
+            int playerChunkX = (int) player.posX / 16;
+            int playerChunkZ = (int) player.posZ / 16;
+            long currentChunkKey = (((long) playerChunkX) << 32) | (playerChunkZ & 0xFFFFFFFFL);
+            
+            String playerName = player.getName();
+            Long lastChunkKey = playerLastChunkPos.get(playerName);
+            
+            // Player moved to a new chunk OR first time checking
+            if (lastChunkKey == null || lastChunkKey != currentChunkKey) {
+                playerLastChunkPos.put(playerName, currentChunkKey);
+                
+                // Schedule chunks around the player for recalculation
+                scheduleChunksAroundPlayer(world, playerChunkX, playerChunkZ, currentTime);
+            }
+        }
+        
+        // Clean up disconnected players
+        playerLastChunkPos.keySet().removeIf(name -> 
+            world.playerEntities.stream().noneMatch(p -> p.getName().equals(name))
+        );
+    }
+    
+    /**
+     * Schedule all chunks in a radius for recalculation
+     * This handles spawn chunks and chunks that were already loaded
+     */
+    private void scheduleChunksAroundPlayer(World world, int centerChunkX, int centerChunkZ, int currentTime) {
+        int radius = 5; // 11x11 chunks (176x176 blocks)
+        
+        for (int x = -radius; x <= radius; x++) {
+            for (int z = -radius; z <= radius; z++) {
+                int chunkX = centerChunkX + x;
+                int chunkZ = centerChunkZ + z;
+                
+                // Check if chunk is loaded without forcing it to load
+                Chunk chunk = world.getChunkProvider().getLoadedChunk(chunkX, chunkZ);
+                
+                if (chunk != null && chunk.isLoaded() && chunk.isPopulated()) {
+                    int savedTime = TimeStampsWorldSavedData.getChunkTimeStamp(chunk);
+                    
+                    // Recalculate if enough time has passed
+                    if (currentTime - savedTime > FertilityConfig.general_category.timeToRecalculateSnow) {
+                        if (!recalculationQueue.contains(chunk)) {
+                            recalculationQueue.offer(chunk);
+                        }
+                    }
+                }
             }
         }
     }
@@ -138,21 +216,12 @@ public class SnowRecalculationHandler {
             return;
         }
         
+        // Force recalculation around player spawn
         int currentTime = (int) (System.currentTimeMillis() / 1000 / 60);
         int playerChunkX = (int) player.posX / 16;
         int playerChunkZ = (int) player.posZ / 16;
-
-        for (int i = -5; i < 5; i++) {
-            for (int j = -5; j < 5; j++) {
-                Chunk chunk = world.getChunk(playerChunkX + i, playerChunkZ + j);
-                if (chunk != null) {
-                    int savedTime = TimeStampsWorldSavedData.getChunkTimeStamp(chunk);
-                    if (currentTime - savedTime > FertilityConfig.general_category.timeToRecalculateSnow) {
-                        recalculationQueue.offer(chunk);
-                    }
-                }
-            }
-        }
+        
+        scheduleChunksAroundPlayer(world, playerChunkX, playerChunkZ, currentTime);
     }
 
     @SubscribeEvent
@@ -164,29 +233,16 @@ public class SnowRecalculationHandler {
         
         Chunk chunk = event.getChunk();
         removeFromRecalculationQueue(chunk);
-        // BUG FIX: Removed incorrect timestamp update here. 
-        // Timestamps should only be updated when recalculation actually succeeds, not just because a chunk unloaded.
+        // BUG FIX: Removed incorrect timestamp update here
+        // Timestamps should only be updated when recalculation actually succeeds, not just because a chunk unloaded
     }
 
     @SubscribeEvent
     public void playerLeftWorld(PlayerEvent.PlayerLoggedOutEvent event) {
         EntityPlayer player = event.player;
-        World world = player.world;
-        if (world.isRemote || world.provider.getDimension() != 0) {
-            return;
-        }
         
-        int playerChunkX = (int) player.posX / 16;
-        int playerChunkZ = (int) player.posZ / 16;
-
-        for (int i = -5; i < 5; i++) {
-            for (int j = -5; j < 5; j++) {
-                Chunk chunk = world.getChunk(playerChunkX + i, playerChunkZ + j);
-                if (chunk != null) {
-                    removeFromRecalculationQueue(chunk);
-                }
-            }
-        }
+        // Remove player from tracking
+        playerLastChunkPos.remove(player.getName());
     }
 
     private boolean shouldMelt(World world, BlockPos pos, SubSeason subSeason) {
