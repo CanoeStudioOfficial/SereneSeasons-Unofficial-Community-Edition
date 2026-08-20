@@ -28,15 +28,14 @@ import java.util.HashSet;
  */
 public class ModFertility
 {
-
-	private static HashSet<String> springPlants = new HashSet<String>();
-	private static HashSet<String> summerPlants = new HashSet<String>();
-	private static HashSet<String> autumnPlants = new HashSet<String>();
-	private static HashSet<String> winterPlants = new HashSet<String>();
-	private static HashSet<String> allListedPlants = new HashSet<String>();
+	private static final HashSet<String> springPlants = new HashSet<>();
+	private static final HashSet<String> summerPlants = new HashSet<>();
+	private static final HashSet<String> autumnPlants = new HashSet<>();
+	private static final HashSet<String> winterPlants = new HashSet<>();
+	private static final HashSet<String> allListedPlants = new HashSet<>();
 
 	//Maps seed name to all fertile seasons via byte
-	private static HashMap<String, Integer> seedSeasons = new HashMap<String, Integer>();
+	private static final HashMap<String, Integer> seedSeasons = new HashMap<>();
 
 	public static void init()
 	{
@@ -49,74 +48,47 @@ public class ModFertility
 
 	public static boolean isCropFertile(String cropName, World world, BlockPos pos)
 	{
-		//Get season
-		Season season = SeasonHelper.getSeasonState(world).getSeason();
-		Biome biome = world.getBiome(pos);
-		
-		if (BiomeConfig.disablesCrops(biome))
-		{
-			return false;
-		}
-		else if (!FertilityConfig.general_category.seasonal_crops || !BiomeConfig.enablesSeasonalEffects(biome) || !SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension()))
+		// OPTIMIZATION: Fail-fast. Check global config and dimension before doing expensive biome/season lookups
+		if (!FertilityConfig.general_category.seasonal_crops || !SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension()))
 		{
 			return true;
+		}
+
+		Biome biome = world.getBiome(pos);
+		
+		if (BiomeConfig.disablesCrops(biome) || !BiomeConfig.enablesSeasonalEffects(biome))
+		{
+			return false;
 		}
 		
 		if (BiomeConfig.usesTropicalSeasons(biome))
 		{
-			if (summerPlants.contains(cropName) || !(allListedPlants.contains(cropName)))
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
+			// In tropical seasons, only summer plants or unlisted plants are fertile
+			return summerPlants.contains(cropName) || !allListedPlants.contains(cropName);
 		}
 		else 
 		{
-			if (biome.getTemperature(pos) < 0.15F)
+			// OPTIMIZATION: Cache temperature lookup
+			float temp = biome.getTemperature(pos);
+			if (temp < 0.15F)
 			{
-				if (winterPlants.contains(cropName))
-				{
-					return true;
-				}
-				else
-				{
-					return false;
-				}
+				// Freezing biomes only allow winter plants
+				return winterPlants.contains(cropName);
 			}
-			else
+			
+			Season season = SeasonHelper.getSeasonState(world).getSeason();
+			switch (season)
 			{
-				if (season == Season.SPRING && springPlants.contains(cropName))
-				{
-					return true;
-				}
-				else if (season == Season.SUMMER && summerPlants.contains(cropName))
-				{
-					return true;
-				}
-				else if (season == Season.AUTUMN && autumnPlants.contains(cropName))
-				{
-					return true;
-				}
-				else if (season == Season.WINTER && winterPlants.contains(cropName))
-				{
-					return true;
-				}
+				case SPRING: return springPlants.contains(cropName);
+				case SUMMER: return summerPlants.contains(cropName);
+				case AUTUMN: return autumnPlants.contains(cropName);
+				case WINTER: return winterPlants.contains(cropName);
+			}
 
-				//Check if unspecified crops are by default fertile in non-winter, and that it's not winter
-				if (!allListedPlants.contains(cropName))
-				{
-					if (season == Season.WINTER)
-					{
-						return (FertilityConfig.general_category.ignore_unlisted_crops);
-					}
-					else
-					{
-						return true;
-					}
-				}
+			//Check if unspecified crops are by default fertile in non-winter, and that it's not winter
+			if (!allListedPlants.contains(cropName))
+			{
+				return season != Season.WINTER || FertilityConfig.general_category.ignore_unlisted_crops;
 			}
 		}
 
@@ -126,68 +98,42 @@ public class ModFertility
 	/**
 	 * Initializes the crops for a particular season. User's responsibility to match seeds and cropSet to be of the
 	 * same season (eg. String [] spring_seeds, HashSet springPlants)
-	 * @param seeds String array of seeds that are fertile during the chosen season
-	 * @param cropSet HashSet that will store the list of crops fertile during the chosen season
 	 */
 	private static void initSeasonCrops(String [] seeds, HashSet<String> cropSet, int bitmask)
 	{
 		for (String seed : seeds)
 		{
-			Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(seed));
+			ResourceLocation rl = new ResourceLocation(seed);
+			Item item = ForgeRegistries.ITEMS.getValue(rl);
 			
 			if (item instanceof IPlantable)
 			{
-				String plantName = ((IPlantable) item).getPlant(null, null).getBlock().getRegistryName().toString();
-				cropSet.add(plantName);
-				
-				if (bitmask != 0)
+				// BUG FIX: Prevent NullPointerException if a mod's getPlant() implementation returns null
+				net.minecraft.block.state.IBlockState plantState = ((IPlantable) item).getPlant(null, null);
+				if (plantState != null)
 				{
-					allListedPlants.add(plantName);
-				}
-				else
-				{
-					continue;
-				}
+					String plantName = plantState.getBlock().getRegistryName().toString();
+					cropSet.add(plantName);
+					
+					if (bitmask != 0) allListedPlants.add(plantName);
+					else continue;
 
-				//Add to seedSeasons
-				if (seedSeasons.containsKey(seed))
-				{
-					int seasons = seedSeasons.get(seed);
-					seedSeasons.put(seed, seasons | bitmask);
-				}
-				else
-				{
-					seedSeasons.put(seed, bitmask);
+					seedSeasons.merge(seed, bitmask, (oldVal, newVal) -> oldVal | newVal);
 				}
 			}
 			else
 			{
-				Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(seed));
+				Block block = ForgeRegistries.BLOCKS.getValue(rl);
 				
 				if (block != null && block != Blocks.AIR)
 				{
 					String plantName = block.getRegistryName().toString();
 					cropSet.add(plantName);
 					
-					if (bitmask != 0)
-					{
-						allListedPlants.add(plantName);
-					}
-					else
-					{
-						continue;
-					}
+					if (bitmask != 0) allListedPlants.add(plantName);
+					else continue;
 		
-					//Add to seedSeasons
-					if (seedSeasons.containsKey(seed))
-					{
-						int seasons = seedSeasons.get(seed);
-						seedSeasons.put(seed, seasons | bitmask);
-					}
-					else
-					{
-						seedSeasons.put(seed, bitmask);
-					}
+					seedSeasons.merge(seed, bitmask, (oldVal, newVal) -> oldVal | newVal);
 				}
 			}
 		}
@@ -199,35 +145,27 @@ public class ModFertility
 		//Set up tooltips if enabled and on client side
 		if (FertilityConfig.general_category.crop_tooltips && FertilityConfig.general_category.seasonal_crops)
 		{
-			String name = event.getItemStack().getItem().getRegistryName().toString();
-			if (seedSeasons.containsKey(name))
+			ResourceLocation rl = event.getItemStack().getItem().getRegistryName();
+			if (rl == null) return;
+			
+			String name = rl.toString();
+			Integer maskObj = seedSeasons.get(name);
+			
+			if (maskObj != null)
 			{
-				int mask = seedSeasons.get(name);
-				
+				int mask = maskObj;
 				event.getToolTip().add(I18n.format("tooltip.sereneseasons.fertile_season"));
 				
-				if ((mask & 1) != 0 && (mask & 2) != 0 && (mask & 4) != 0 && (mask & 8) != 0)
+				if ((mask & 15) == 15) // 1+2+4+8 = 15
 				{
 					event.getToolTip().add(TextFormatting.LIGHT_PURPLE + I18n.format("tooltip.sereneseasons.season.all"));
 				}
 				else
 				{
-					if ((mask & 1) != 0)
-					{
-						event.getToolTip().add(TextFormatting.GREEN + I18n.format("tooltip.sereneseasons.season.spring"));
-					}
-					if ((mask & 2) != 0)
-					{
-						event.getToolTip().add(TextFormatting.YELLOW + I18n.format("tooltip.sereneseasons.season.summer"));
-					}
-					if ((mask & 4) != 0)
-					{
-						event.getToolTip().add(TextFormatting.GOLD + I18n.format("tooltip.sereneseasons.season.autumn"));
-					}
-					if ((mask & 8) != 0)
-					{
-						event.getToolTip().add(TextFormatting.AQUA + I18n.format("tooltip.sereneseasons.season.winter"));
-					}
+					if ((mask & 1) != 0) event.getToolTip().add(TextFormatting.GREEN + I18n.format("tooltip.sereneseasons.season.spring"));
+					if ((mask & 2) != 0) event.getToolTip().add(TextFormatting.YELLOW + I18n.format("tooltip.sereneseasons.season.summer"));
+					if ((mask & 4) != 0) event.getToolTip().add(TextFormatting.GOLD + I18n.format("tooltip.sereneseasons.season.autumn"));
+					if ((mask & 8) != 0) event.getToolTip().add(TextFormatting.AQUA + I18n.format("tooltip.sereneseasons.season.winter"));
 				}
 			}
 		}

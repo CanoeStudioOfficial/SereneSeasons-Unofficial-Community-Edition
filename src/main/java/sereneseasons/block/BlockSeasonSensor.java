@@ -63,7 +63,7 @@ public class BlockSeasonSensor extends BlockContainer implements ISSBlock
         this.type = type;
         this.setHardness(0.2F);
         this.setSoundType(SoundType.WOOD);
-        this.setDefaultState( this.blockState.getBaseState().withProperty(POWER, Integer.valueOf(0)) );        
+        this.setDefaultState(this.blockState.getBaseState().withProperty(POWER, 0));        
     }
     
     @Override
@@ -75,31 +75,38 @@ public class BlockSeasonSensor extends BlockContainer implements ISSBlock
     @Override
     public int getWeakPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side)
     {
-        return ((Integer)blockState.getValue(POWER)).intValue();
+        return blockState.getValue(POWER);
     }
 
     public void updatePower(World world, BlockPos pos)
     {
-        if (SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension()))
+        IBlockState currentState = world.getBlockState(pos);
+        
+        // BUG FIX: If the dimension is not whitelisted, turn off the redstone signal instead of freezing it
+        if (!SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension()))
         {
-            IBlockState currentState = world.getBlockState(pos);
+            if (currentState.getValue(POWER) != 0)
+            {
+                world.setBlockState(pos, currentState.withProperty(POWER, 0), 3);
+            }
+            return;
+        }
 
-            int power = 0;
-            int startTicks = this.type.ordinal() * SeasonTime.ZERO.getSeasonDuration();
-            int endTicks = (this.type.ordinal() + 1) * SeasonTime.ZERO.getSeasonDuration();
-            int currentTicks = SeasonHelper.getSeasonState(world).getSeasonCycleTicks();
-            
-            if (currentTicks >= startTicks && currentTicks <= endTicks)
-            {
-                float delta = (float)(currentTicks - startTicks) / (float)SeasonTime.ZERO.getSeasonDuration();
-                power = (int)Math.min(delta * 15.0F + 1.0F, 15.0F);
-            }
-            
-            //Only update the state if the power level has actually changed
-            if (((Integer)currentState.getValue(POWER)).intValue() != power)
-            {
-                world.setBlockState(pos, currentState.withProperty(POWER, Integer.valueOf(power)), 3);
-            }
+        int power = 0;
+        int startTicks = this.type.ordinal() * SeasonTime.ZERO.getSeasonDuration();
+        int endTicks = (this.type.ordinal() + 1) * SeasonTime.ZERO.getSeasonDuration();
+        int currentTicks = SeasonHelper.getSeasonState(world).getSeasonCycleTicks();
+        
+        if (currentTicks >= startTicks && currentTicks <= endTicks)
+        {
+            float delta = (float)(currentTicks - startTicks) / (float)SeasonTime.ZERO.getSeasonDuration();
+            power = (int)Math.min(delta * 15.0F + 1.0F, 15.0F);
+        }
+        
+        // Only update the state if the power level has actually changed
+        if (currentState.getValue(POWER) != power)
+        {
+            world.setBlockState(pos, currentState.withProperty(POWER, power), 3);
         }
     }
 
@@ -115,7 +122,11 @@ public class BlockSeasonSensor extends BlockContainer implements ISSBlock
             else
             {
                 Block nextBlock = SSBlocks.season_sensors[(this.type.ordinal() + 1) % DetectorType.values().length];
-                world.setBlockState(pos, nextBlock.getDefaultState().withProperty(POWER, state.getValue(POWER)), 4);
+                
+                // BUG FIX: Changed flag from 4 to 3. 
+                // Flag 4 only notifies clients, ignoring neighbor updates. This caused redstone circuits to not 
+                // register the power change when cycling the sensor by right-clicking it.
+                world.setBlockState(pos, nextBlock.getDefaultState().withProperty(POWER, state.getValue(POWER)), 3);
                 ((BlockSeasonSensor)nextBlock).updatePower(world, pos);
                 return true;
             }
@@ -178,7 +189,7 @@ public class BlockSeasonSensor extends BlockContainer implements ISSBlock
     @Override
     protected BlockStateContainer createBlockState()
     {
-        return new BlockStateContainer(this, new IProperty[] { POWER });
+        return new BlockStateContainer(this, POWER);
     }
     
     public static enum DetectorType implements IStringSerializable
@@ -194,5 +205,5 @@ public class BlockSeasonSensor extends BlockContainer implements ISSBlock
         {
             return this.getName();
         }
-    };
+    }
 }

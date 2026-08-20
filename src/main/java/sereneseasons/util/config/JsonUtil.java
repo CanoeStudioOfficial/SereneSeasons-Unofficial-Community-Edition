@@ -15,6 +15,7 @@ import sereneseasons.core.SereneSeasons;
 
 import java.io.File;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 
 public class JsonUtil
 {
@@ -24,7 +25,7 @@ public class JsonUtil
     {
         File configFile = new File(configDir, configName);
 
-        //No config file, so create default config:
+        // No config file, so create default config:
         if (!configFile.exists())
         {
             writeFile(configFile, defaults);
@@ -32,7 +33,9 @@ public class JsonUtil
 
         try
         {
-            return (T)SERIALIZER.fromJson(FileUtils.readFileToString(configFile), type);
+            // BUG FIX: Specify UTF-8 encoding to prevent platform-dependent encoding issues
+            String jsonContent = FileUtils.readFileToString(configFile, StandardCharsets.UTF_8);
+            return SERIALIZER.fromJson(jsonContent, type);
         }
         catch (Exception e)
         {
@@ -46,7 +49,9 @@ public class JsonUtil
     {
         try
         {
-            FileUtils.write(outputFile, SERIALIZER.toJson(obj));
+            // BUG FIX: Specify UTF-8 encoding to prevent platform-dependent encoding issues
+            String jsonContent = SERIALIZER.toJson(obj);
+            FileUtils.write(outputFile, jsonContent, StandardCharsets.UTF_8);
             return true;
         }
         catch (Exception e)

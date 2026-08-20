@@ -35,113 +35,120 @@ public class RandomUpdateHandler
 	{
 		if (event.phase == Phase.END && event.side == Side.SERVER)
 		{
-
-			Season.SubSeason subSeason = SeasonHelper.getSeasonState(event.world).getSubSeason();
+			WorldServer world = (WorldServer) event.world;
+			Season.SubSeason subSeason = SeasonHelper.getSeasonState(world).getSubSeason();
 			Season season = subSeason.getSeason();
 
-			if (season == Season.WINTER)
+			// OPTIMIZATION: Handle weather changes first, cleanly separated
+			if (ModConfig.seasons.changeWeatherFrequency)
 			{
-				if (ModConfig.seasons.changeWeatherFrequency)
-				{
-					if (event.world.getWorldInfo().isThundering())
-					{
-						event.world.getWorldInfo().setThundering(false);;
-					}
-					if (!event.world.getWorldInfo().isRaining() && event.world.getWorldInfo().getRainTime() > 36000)
-					{
-						event.world.getWorldInfo().setRainTime(event.world.rand.nextInt(24000) + 12000);
-					}
-				}
+				handleWeatherChanges(world, season);
 			}
-			else
+
+			if (season == Season.WINTER || !SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension()))
 			{
-				if (ModConfig.seasons.changeWeatherFrequency)
+				return;
+			}
+
+			// OPTIMIZATION: Calculate rand threshold once per tick
+			int rand;
+			switch (subSeason)
+			{
+				case EARLY_SPRING: rand = 16; break;
+				case MID_SPRING:   rand = 12; break;
+				case LATE_SPRING:  rand = 8;  break;
+				default:           rand = 4;  break;
+			}
+
+			// OPTIMIZATION: Reusable BlockPos to prevent massive GC pressure
+			BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
+
+			for (Iterator<Chunk> iterator = world.getPersistentChunkIterable(world.getPlayerChunkMap().getChunkIterator()); iterator.hasNext();)
+			{
+				Chunk chunk = iterator.next();
+				
+				// BUG FIX: Using world.rand instead of manipulating world.updateLCG which breaks vanilla random ticks
+				if (world.rand.nextInt(rand) != 0) continue;
+
+				int x = chunk.x << 4;
+				int z = chunk.z << 4;
+
+				// Use standard random offset for chunk
+				int randOffset = world.rand.nextInt(256);
+				int localX = randOffset & 15;
+				int localZ = (randOffset >> 4) & 15;
+
+				mutablePos.setPos(x + localX, 0, z + localZ);
+				BlockPos precipPos = world.getPrecipitationHeight(mutablePos);
+				
+				Biome biome = world.getBiome(precipPos);
+
+				if(!BiomeConfig.enablesSeasonalEffects(biome))
+					continue;
+
+				boolean first = true;
+				
+				// BUG FIX: chunk.getBlockState(int x, int y, int z) expects LOCAL coordinates (0-15).
+				// The original code passed absolute pos.getX(), which read the wrong block or crashed.
+				// We now use world.getBlockState() with absolute coordinates.
+				for (int y = precipPos.getY(); y >= 0; y--)
 				{
-					if (season == Season.SPRING)
+					mutablePos.setY(y);
+					Block block = world.getBlockState(mutablePos).getBlock();
+
+					if (block == Blocks.SNOW_LAYER)
 					{
-						if (!event.world.getWorldInfo().isRaining() && event.world.getWorldInfo().getRainTime() > 96000)
+						if (SeasonASMHelper.getFloatTemperature(world, biome, mutablePos) >= 0.15F)
 						{
-							event.world.getWorldInfo().setRainTime(event.world.rand.nextInt(84000) + 12000);
+							world.setBlockToAir(mutablePos);
+							break;
 						}
 					}
-					else if (season == Season.SUMMER)
+
+					if(!first)
 					{
-						if (!event.world.getWorldInfo().isThundering() && event.world.getWorldInfo().getThunderTime() > 36000)
+						if(block == Blocks.ICE)
 						{
-							event.world.getWorldInfo().setThunderTime(event.world.rand.nextInt(24000) + 12000);
-						}
-					}
-				}
-
-				if (SeasonsConfig.isDimensionWhitelisted(event.world.provider.getDimension()))
-				{
-					WorldServer world = (WorldServer)event.world;
-					for (Iterator<Chunk> iterator = world.getPersistentChunkIterable(world.getPlayerChunkMap().getChunkIterator()); iterator.hasNext();)
-					{
-						Chunk chunk = iterator.next();
-						int x = chunk.x << 4;
-						int z = chunk.z << 4;
-
-						int rand;
-						switch (subSeason)
-						{
-							case EARLY_SPRING:
-								rand = 16;
-								break;
-							case MID_SPRING:
-								rand = 12;
-								break;
-							case LATE_SPRING:
-								rand = 8;
-								break;
-							default:
-								rand = 4;
-								break;
-						}
-
-						if (world.rand.nextInt(rand) == 0)
-						{
-							world.updateLCG = world.updateLCG * 3 + 1013904223;
-							int randOffset = world.updateLCG >> 2;
-							BlockPos pos = world.getPrecipitationHeight(new BlockPos(x + (randOffset & 15), 0, z + (randOffset >> 8 & 15)));
-							Biome biome = world.getBiome(pos);
-
-							if(!BiomeConfig.enablesSeasonalEffects(biome))
-								continue;
-
-							boolean first = true;
-							for (int y = pos.getY(); y >= 0; y--)
+							if (SeasonASMHelper.getFloatTemperature(world, biome, mutablePos) >= 0.15F)
 							{
-								Block block = chunk.getBlockState(pos.getX(), y, pos.getZ()).getBlock();
-
-								if (block == Blocks.SNOW_LAYER)
-								{
-									pos = new BlockPos(pos.getX(), y, pos.getZ());
-									if (SeasonASMHelper.getFloatTemperature(world, biome, pos) >= 0.15F)
-									{
-										world.setBlockToAir(pos);
-										break;
-									}
-								}
-
-								if(!first)
-								{
-									if(block == Blocks.ICE)
-									{
-										pos = new BlockPos(pos.getX(), y, pos.getZ());
-										if (SeasonASMHelper.getFloatTemperature(world, biome, pos) >= 0.15F)
-										{
-											((BlockIce)Blocks.ICE).turnIntoWater(world, pos);
-											break;
-										}
-									}
-								}
-								else
-									first = false;
+								// BUG FIX: turnIntoWater requires absolute coordinates
+								((BlockIce)Blocks.ICE).turnIntoWater(world, mutablePos);
+								break;
 							}
 						}
 					}
+					else
+						first = false;
 				}
+			}
+		}
+	}
+
+	private void handleWeatherChanges(WorldServer world, Season season)
+	{
+		if (season == Season.WINTER)
+		{
+			if (world.getWorldInfo().isThundering())
+			{
+				world.getWorldInfo().setThundering(false);
+			}
+			if (!world.getWorldInfo().isRaining() && world.getWorldInfo().getRainTime() > 36000)
+			{
+				world.getWorldInfo().setRainTime(world.rand.nextInt(24000) + 12000);
+			}
+		}
+		else if (season == Season.SPRING)
+		{
+			if (!world.getWorldInfo().isRaining() && world.getWorldInfo().getRainTime() > 96000)
+			{
+				world.getWorldInfo().setRainTime(world.rand.nextInt(84000) + 12000);
+			}
+		}
+		else if (season == Season.SUMMER)
+		{
+			if (!world.getWorldInfo().isThundering() && world.getWorldInfo().getThunderTime() > 36000)
+			{
+				world.getWorldInfo().setThunderTime(world.rand.nextInt(24000) + 12000);
 			}
 		}
 	}

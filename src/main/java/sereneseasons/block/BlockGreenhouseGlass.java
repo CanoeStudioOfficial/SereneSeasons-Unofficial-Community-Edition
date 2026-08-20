@@ -31,7 +31,7 @@ public class BlockGreenhouseGlass extends BlockBreakable implements ISSBlock
     @Override
     public IProperty[] getNonRenderingProperties() { return null; }
     @Override
-    public String getStateName(IBlockState state) {return "";}
+    public String getStateName(IBlockState state) { return ""; }
     
     public BlockGreenhouseGlass()
     {
@@ -72,5 +72,4 @@ public class BlockGreenhouseGlass extends BlockBreakable implements ISSBlock
     {
         return true;
     }
-    
 }

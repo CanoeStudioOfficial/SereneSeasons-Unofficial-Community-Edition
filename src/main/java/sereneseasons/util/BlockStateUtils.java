@@ -6,87 +6,119 @@ import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import sereneseasons.api.ISSBlock;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Stack;
 
 public class BlockStateUtils
 {
     
-    // utility function for dumping block state info to a string
+    /**
+     * Utility function for dumping block state info to a string
+     */
     public static String getStateInfoAsString(IBlockState state)
     {
-        String desc = state.getBlock().getClass().getName() + "[";
-        Iterator it = state.getProperties().entrySet().iterator();
+        StringBuilder desc = new StringBuilder(state.getBlock().getClass().getName() + "[");
         boolean first = true;
-        while (it.hasNext())
+        
+        // BUG FIX: Added generic types to prevent raw type warnings
+        for (Entry<IProperty<?>, Comparable<?>> entry : state.getProperties().entrySet())
         {
-            if (!first) {desc = desc + ",";}
-            Entry entry = (Entry)it.next();
-            IProperty iproperty = (IProperty)entry.getKey();
-            Comparable comparable = (Comparable)entry.getValue();
-            desc = desc + iproperty.getName() + "=" + iproperty.getName(comparable);
+            if (!first) {
+                desc.append(",");
+            }
+            IProperty<?> iproperty = entry.getKey();
+            Comparable<?> comparable = entry.getValue();
+            desc.append(iproperty.getName()).append("=").append(getPropertyName(iproperty, comparable));
             first = false;
         }
-        desc = desc + "]";
-        return desc;
+        desc.append("]");
+        return desc.toString();
+    }
+    
+    // Helper method to safely get property name
+    @SuppressWarnings("unchecked")
+    private static <T extends Comparable<T>> String getPropertyName(IProperty<T> property, Comparable<?> value)
+    {
+        return property.getName((T) value);
     }
     
 
-    // returns a set of states, one for every possible combination of values from the provided properties
-    public static ImmutableSet<IBlockState> getStatesSet(IBlockState baseState, IProperty... properties)
-    {        
-        Stack<IProperty> propStack = new Stack<IProperty>();
-        List<IBlockState> states = new ArrayList<IBlockState>();
-        for (IProperty prop : properties) {propStack.push(prop);}
+    /**
+     * Returns a set of states, one for every possible combination of values from the provided properties
+     */
+    public static ImmutableSet<IBlockState> getStatesSet(IBlockState baseState, IProperty<?>... properties)
+    {
+        // OPTIMIZATION: Use ArrayDeque instead of Stack (Stack is synchronized and slower)
+        Deque<IProperty<?>> propStack = new ArrayDeque<>();
+        List<IBlockState> states = new ArrayList<>();
+        
+        for (IProperty<?> prop : properties) {
+            propStack.push(prop);
+        }
+        
         if (!propStack.isEmpty())
         {
             addStatesToList(baseState, states, propStack);
         }
-        ImmutableSet<IBlockState> ret = ImmutableSet.copyOf(states);
-        return ret;
+        
+        return ImmutableSet.copyOf(states);
     }
     
-    // recursively add state values to a list
-    private static void addStatesToList(IBlockState state, List<IBlockState> list, Stack<IProperty> stack)
-    {    
-        if (stack.empty())
+    /**
+     * Recursively add state values to a list
+     */
+    @SuppressWarnings("unchecked")
+    private static <T extends Comparable<T>> void addStatesToList(IBlockState state, List<IBlockState> list, Deque<IProperty<?>> stack)
+    {
+        if (stack.isEmpty())
         {
             list.add(state);
             return;
         }
-        else
+        
+        IProperty<T> prop = (IProperty<T>) stack.pop();
+        
+        for (T value : prop.getAllowedValues())
         {
-            IProperty prop = stack.pop();        
-            for (Object value : prop.getAllowedValues())
-            {
-                addStatesToList(state.withProperty(prop, (Comparable)value), list, stack);
-            }
-            stack.push(prop);
+            addStatesToList(state.withProperty(prop, value), list, stack);
         }
+        
+        stack.push(prop);
     }
     
-    // return all of the different 'preset' variants of a block
-    // works by looping through all the different values of the properties specified in block.getPresetProperties()
-    // only works on blocks supporting IBOPBlock - returns an empty set for vanilla blocks
+    /**
+     * Return all of the different 'preset' variants of a block.
+     * Works by looping through all the different values of the properties specified in block.getPresetProperties().
+     * Only works on blocks supporting ISSBlock - returns an empty set for vanilla blocks.
+     */
     public static ImmutableSet<IBlockState> getBlockPresets(Block block)
     {
-        if (!(block instanceof ISSBlock)) {return ImmutableSet.<IBlockState>of();}
+        if (!(block instanceof ISSBlock)) {
+            return ImmutableSet.of();
+        }
+        
         IBlockState defaultState = block.getDefaultState();
-        if (defaultState == null) {defaultState = block.getBlockState().getBaseState();}
-        return getStatesSet(defaultState, ((ISSBlock)block).getPresetProperties());
-    }    
+        if (defaultState == null) {
+            defaultState = block.getBlockState().getBaseState();
+        }
+        
+        return getStatesSet(defaultState, ((ISSBlock) block).getPresetProperties());
+    }
     
-    /**Discards additional block information to retrieve a state equivalent to those in the inventory**/
+    /**
+     * Discards additional block information to retrieve a state equivalent to those in the inventory
+     */
+    @SuppressWarnings("unchecked")
     public static IBlockState getPresetState(IBlockState state)
     {
         IBlockState outState = state.getBlock().getDefaultState();
         
         if (state.getBlock() instanceof ISSBlock)
         {
-            ISSBlock bopBlock = (ISSBlock)state.getBlock();
+            ISSBlock bopBlock = (ISSBlock) state.getBlock();
             
             for (IProperty property : bopBlock.getPresetProperties())
             {
@@ -97,9 +129,13 @@ public class BlockStateUtils
         return outState;
     }
     
-    public static IProperty getPropertyByName(IBlockState blockState, String propertyName)
+    /**
+     * Gets a property by name from a block state
+     */
+    public static IProperty<?> getPropertyByName(IBlockState blockState, String propertyName)
     {
-        for (IProperty property : (ImmutableSet<IProperty<?>>) blockState.getProperties().keySet())
+        // OPTIMIZATION: Removed unnecessary cast to ImmutableSet
+        for (IProperty<?> property : blockState.getProperties().keySet())
         {
             if (property.getName().equals(propertyName))
                 return property;
@@ -113,9 +149,13 @@ public class BlockStateUtils
         return getPropertyByName(blockState, propertyName) != null;
     }
 
-    public static Comparable getPropertyValueByName(IBlockState blockState, IProperty property, String valueName)
+    /**
+     * Gets a property value by name
+     */
+    public static Comparable<?> getPropertyValueByName(IBlockState blockState, IProperty<?> property, String valueName)
     {
-        for (Comparable value : (ImmutableSet<Comparable>) property.getAllowedValues())
+        // OPTIMIZATION: Removed unnecessary cast to ImmutableSet
+        for (Comparable<?> value : property.getAllowedValues())
         {
             if (value.toString().equals(valueName))
                 return value;
@@ -123,6 +163,4 @@ public class BlockStateUtils
 
         return null;
     }
-    
-
 }

@@ -10,7 +10,6 @@ package sereneseasons.util;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.biome.Biome;
-import org.lwjgl.util.Color;
 import sereneseasons.api.season.ISeasonColorProvider;
 import sereneseasons.api.season.Season;
 import sereneseasons.config.BiomeConfig;
@@ -19,11 +18,15 @@ import sereneseasons.init.ModConfig;
 
 public class SeasonColourUtil 
 {
+    // OPTIMIZATION: Reusable array to prevent massive Garbage Collection (GC) pressure
+    // from creating new float[] arrays for every single block rendered.
+    private static final ThreadLocal<float[]> HSB_VALUES = ThreadLocal.withInitial(() -> new float[3]);
+
+    // OPTIMIZATION: Replaced float division/multiplication with faster integer math.
+    // (c1 * c2) / 255 is mathematically equivalent for 0-255 ranges but much faster.
     public static int multiplyColours(int colour1, int colour2)
     {
-        //Convert each colour to a scale between 0 and 1 and multiply them
-        //Multiply by 255 to bring back between 0 and 255
-        return (int)((colour1 / 255.0F) * (colour2 / 255.0F) * 255.0F);
+        return (colour1 * colour2) / 255;
     }
 
     public static int overlayBlendChannel(int underColour, int overColour)
@@ -52,16 +55,30 @@ public class SeasonColourUtil
     
     public static int saturateColour(int colour, float saturationMultiplier)
     {
-        Color newColour = getColourFromInt(colour);
-        float[] hsb = newColour.toHSB(null);
+        // OPTIMIZATION: Early exit if no saturation change is needed
+        if (saturationMultiplier == 1.0F) return colour;
+
+        int r = (colour >> 16) & 255;
+        int g = (colour >> 8) & 255;
+        int b = colour & 255;
+
+        // OPTIMIZATION: Use java.awt.Color with reusable ThreadLocal array instead of org.lwjgl.util.Color
+        // which creates new objects and arrays every time, causing micro-stutters.
+        float[] hsb = HSB_VALUES.get();
+        java.awt.Color.RGBtoHSB(r, g, b, hsb);
+        
         hsb[1] *= saturationMultiplier;
-        newColour.fromHSB(hsb[0], hsb[1], hsb[2]);
-        return getIntFromColour(newColour);
+        if (hsb[1] > 1.0F) hsb[1] = 1.0F;
+        if (hsb[1] < 0.0F) hsb[1] = 0.0F;
+        
+        return java.awt.Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]);
     }
     
     public static int applySeasonalGrassColouring(ISeasonColorProvider colorProvider, Biome biome, int originalColour)
     {
-        if (!BiomeConfig.enablesSeasonalEffects(biome) || !SeasonsConfig.isDimensionWhitelisted(Minecraft.getMinecraft().player.dimension))
+        // BUG FIX: Prevent NullPointerException (NPE) when player is null (e.g., in main menu or loading screens)
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.player == null || !BiomeConfig.enablesSeasonalEffects(biome) || !SeasonsConfig.isDimensionWhitelisted(mc.player.dimension))
             return originalColour;
 
         int overlay = colorProvider.getGrassOverlay();
@@ -71,13 +88,16 @@ public class SeasonColourUtil
         	overlay = Season.SubSeason.MID_SUMMER.getGrassOverlay();
             saturationMultiplier = Season.SubSeason.MID_SUMMER.getGrassSaturationMultiplier();
     	}
-        int newColour = overlay == 0xFFFFFF ? originalColour : overlayBlend(originalColour, overlay);
-        return saturationMultiplier != -1 ? saturateColour(newColour, saturationMultiplier) : newColour;
+        // BUG FIX: Use bitmask to ignore alpha channel when checking for white overlay
+        int newColour = ((overlay & 0xFFFFFF) == 0xFFFFFF) ? originalColour : overlayBlend(originalColour, overlay);
+        return (saturationMultiplier != 1.0F && saturationMultiplier != -1.0F) ? saturateColour(newColour, saturationMultiplier) : newColour;
     }
     
     public static int applySeasonalFoliageColouring(ISeasonColorProvider colorProvider, Biome biome, int originalColour)
     {
-        if (!BiomeConfig.enablesSeasonalEffects(biome) || !SeasonsConfig.isDimensionWhitelisted(Minecraft.getMinecraft().player.dimension))
+        // BUG FIX: Prevent NullPointerException (NPE) when player is null
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.player == null || !BiomeConfig.enablesSeasonalEffects(biome) || !SeasonsConfig.isDimensionWhitelisted(mc.player.dimension))
             return originalColour;
 
         int overlay = colorProvider.getFoliageOverlay();
@@ -87,17 +107,8 @@ public class SeasonColourUtil
         	overlay = Season.SubSeason.MID_SUMMER.getFoliageOverlay();
             saturationMultiplier = Season.SubSeason.MID_SUMMER.getFoliageSaturationMultiplier();
     	}
-        int newColour = overlay == 0xFFFFFF ? originalColour : overlayBlend(originalColour, overlay);
-        return saturationMultiplier != -1 ? saturateColour(newColour, saturationMultiplier) : newColour;
-    }
-    
-    private static Color getColourFromInt(int colour)
-    {
-        return new Color((colour >> 16) & 255, (colour >> 8) & 255, colour & 255);
-    }
-    
-    private static int getIntFromColour(Color colour)
-    {
-        return (colour.getRed() & 255) << 16 | (colour.getGreen() & 255) << 8 | colour.getBlue() & 255;
+        // BUG FIX: Use bitmask to ignore alpha channel when checking for white overlay
+        int newColour = ((overlay & 0xFFFFFF) == 0xFFFFFF) ? originalColour : overlayBlend(originalColour, overlay);
+        return (saturationMultiplier != 1.0F && saturationMultiplier != -1.0F) ? saturateColour(newColour, saturationMultiplier) : newColour;
     }
 }

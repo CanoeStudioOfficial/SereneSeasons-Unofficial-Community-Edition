@@ -63,9 +63,17 @@ public class SeasonalCropGrowthHandler
 
 	private boolean isGreenhouseGlassAboveBlock(World world, BlockPos cropPos)
 	{
-		for (int i = 0; i < FertilityConfig.general_category.greenhouse_glass_max_height; i++)
+		int maxHeight = FertilityConfig.general_category.greenhouse_glass_max_height;
+		int maxY = cropPos.getY() + maxHeight;
+		
+		// OPTIMIZATION: Reusable BlockPos to prevent massive GC pressure during crop growth
+		BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos(cropPos);
+		
+		for (int y = cropPos.getY() + 1; y <= maxY; y++)
 		{
-			if (world.getBlockState(cropPos.add(0, i + 1, 0)).getBlock().equals(SSBlocks.greenhouse_glass))
+			mutablePos.setY(y);
+			// OPTIMIZATION: Blocks are singletons, using == is faster and safer than .equals()
+			if (world.getBlockState(mutablePos).getBlock() == SSBlocks.greenhouse_glass)
 			{
 				return true;
 			}

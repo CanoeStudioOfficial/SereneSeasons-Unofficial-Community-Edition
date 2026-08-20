@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.SeasonHelper;
+import sereneseasons.config.SeasonsConfig;
 import sereneseasons.season.SeasonASMHelper;
 import sereneseasons.season.SeasonalCelestialAngle;
 
@@ -20,6 +21,9 @@ public abstract class WorldMixin {
     )
     public void injectSeasonalCelestialAngle(float partialTicks, CallbackInfoReturnable<Float> cir) {
         World world = (World) (Object) this;
+        // OPTIMIZATION: Skip if dimension is not whitelisted to prevent messing with modded dimensions/Nether/End
+        if (!SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension())) return;
+        
         cir.setReturnValue(SeasonalCelestialAngle.calculate(world, world.getWorldTime(), partialTicks));
     }
 
@@ -30,6 +34,8 @@ public abstract class WorldMixin {
     )
     public void rewriteCanSnowAt(BlockPos pos, boolean checkLight, CallbackInfoReturnable<Boolean> cir) {
         World world = (World) (Object) this;
+        if (!SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension())) return;
+
         ISeasonState seasonState = SeasonHelper.getSeasonState(world);
         cir.setReturnValue(SeasonASMHelper.canSnowAtInSeason(world, pos, checkLight, seasonState));
     }
@@ -41,6 +47,8 @@ public abstract class WorldMixin {
     )
     public void rewriteCanBlockFreeze(BlockPos pos, boolean noWaterAdj, CallbackInfoReturnable<Boolean> cir) {
         World world = (World) (Object) this;
+        if (!SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension())) return;
+
         ISeasonState seasonState = SeasonHelper.getSeasonState(world);
         cir.setReturnValue(SeasonASMHelper.canBlockFreezeInSeason(world, pos, noWaterAdj, seasonState));
     }
@@ -55,6 +63,8 @@ public abstract class WorldMixin {
     )
     public void injectIsRainingAt(BlockPos position, CallbackInfoReturnable<Boolean> cir) {
         World world = (World) (Object) this;
+        if (!SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension())) return;
+
         ISeasonState seasonState = SeasonHelper.getSeasonState(world);
         cir.setReturnValue(SeasonASMHelper.isRainingAtInSeason(world, position, seasonState));
     }

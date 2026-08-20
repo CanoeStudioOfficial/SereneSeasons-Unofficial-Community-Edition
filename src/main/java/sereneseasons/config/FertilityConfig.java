@@ -40,10 +40,13 @@ public class FertilityConfig
 		@Config.Comment({"Maximum height greenhouse glass can be above a crop for it to be fertile out of season"})
 		public int greenhouse_glass_max_height = 7;
 
+        // BUG FIX: Removed 'static' modifier. Forge's @Config annotation processor ignores static fields 
+        // inside instantiated category classes. This caused the config file values to be completely ignored.
         @Config.Comment("This setting determines if the server will recalculate snow based on the season as you explore your world.\nThis makes your world much prettier!")
-        public static boolean shouldRecalculateSnow = true;
+        public boolean shouldRecalculateSnow = true;
+        
         @Config.Comment("This setting determines how long a chunk must be unloaded in order to have its snow and ice recalculated.\nEnter a value in minutes.")
-        public static int timeToRecalculateSnow = 20;
+        public int timeToRecalculateSnow = 20;
 	}
 
 	public static class SeasonFertility

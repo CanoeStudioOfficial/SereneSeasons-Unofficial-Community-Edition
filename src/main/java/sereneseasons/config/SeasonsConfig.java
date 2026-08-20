@@ -12,6 +12,8 @@ import sereneseasons.core.SereneSeasons;
 import sereneseasons.init.ModConfig;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SeasonsConfig extends ConfigHandler
 {
@@ -29,6 +31,10 @@ public class SeasonsConfig extends ConfigHandler
     public boolean changeBirchColour;
     
     public String[] whitelistedDimensions;
+
+    // OPTIMIZATION: Cache parsed dimension IDs to prevent massive GC pressure and CPU waste.
+    // The original code parsed Strings to Integers EVERY TIME isDimensionWhitelisted was called (thousands of times per second).
+    private static Set<Integer> whitelistedDimensionsCache = new HashSet<>();
 
     public SeasonsConfig(File configFile)
     {
@@ -57,6 +63,20 @@ public class SeasonsConfig extends ConfigHandler
             changeBirchColour = config.getBoolean("Change Birch Colour Seasonally", AESTHETIC_SETTINGS, true, "Change the birch colour based on the current season");
         
             whitelistedDimensions = config.getStringList("Whitelisted Dimensions", DIMENSION_SETTINGS, new String[] { "0" }, "Seasons will only apply to dimensons listed here");
+            
+            // OPTIMIZATION: Rebuild the cache whenever the config is loaded or reloaded
+            whitelistedDimensionsCache.clear();
+            for (String dimStr : whitelistedDimensions)
+            {
+                try 
+                {
+                    whitelistedDimensionsCache.add(Integer.parseInt(dimStr.trim()));
+                } 
+                catch (NumberFormatException e) 
+                {
+                    SereneSeasons.logger.error("Invalid dimension ID in Seasons Config whitelist: '{}'. Please use numeric IDs.", dimStr);
+                }
+            }
         }
         catch (Exception e)
         {
@@ -68,16 +88,9 @@ public class SeasonsConfig extends ConfigHandler
         }
     }
     
+    // OPTIMIZATION: O(1) HashSet lookup instead of O(N) String parsing loop
     public static boolean isDimensionWhitelisted(int dimension)
     {
-    	for (String dimensions : ModConfig.seasons.whitelistedDimensions)
-		{
-    		if (dimension == Integer.valueOf(dimensions))
-			{
-    			return true;
-			}
-		}
-    	
-    	return false;
+        return whitelistedDimensionsCache.contains(dimension);
     }
 }

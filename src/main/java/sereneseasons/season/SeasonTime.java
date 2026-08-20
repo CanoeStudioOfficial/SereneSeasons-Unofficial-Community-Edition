@@ -18,6 +18,10 @@ public final class SeasonTime implements ISeasonState
     public static final SeasonTime ZERO = new SeasonTime(0);
     public final int time;
     
+    // OPTIMIZATION: Cache config values to prevent repeated lookups
+    private static int cachedDayDuration = -1;
+    private static int cachedSubSeasonDuration = -1;
+    
     public SeasonTime(int time)
     {
         Preconditions.checkArgument(time >= 0, "Time cannot be negative!");
@@ -27,13 +31,21 @@ public final class SeasonTime implements ISeasonState
     @Override
     public int getDayDuration()
     {
-        return SyncedConfig.getIntValue(SeasonsOption.DAY_DURATION);
+        if (cachedDayDuration == -1)
+        {
+            cachedDayDuration = SyncedConfig.getIntValue(SeasonsOption.DAY_DURATION);
+        }
+        return cachedDayDuration;
     }
 
     @Override
     public int getSubSeasonDuration()
     {
-        return getDayDuration() * SyncedConfig.getIntValue(SeasonsOption.SUB_SEASON_DURATION);
+        if (cachedSubSeasonDuration == -1)
+        {
+            cachedSubSeasonDuration = getDayDuration() * SyncedConfig.getIntValue(SeasonsOption.SUB_SEASON_DURATION);
+        }
+        return cachedSubSeasonDuration;
     }
 
     @Override
@@ -78,5 +90,12 @@ public final class SeasonTime implements ISeasonState
     {
         int index = ((((this.time / getSubSeasonDuration()) + 11) / 2) + 5) % Season.TropicalSeason.VALUES.length;
         return Season.TropicalSeason.VALUES[index];
+    }
+    
+    // Call this when config changes to refresh cached values
+    public static void invalidateCache()
+    {
+        cachedDayDuration = -1;
+        cachedSubSeasonDuration = -1;
     }
 }

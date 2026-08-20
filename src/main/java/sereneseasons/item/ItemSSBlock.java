@@ -14,7 +14,6 @@ import sereneseasons.util.BlockStateUtils;
 
 public class ItemSSBlock extends ItemBlock
 {
-
     public ISSBlock tanBlock;
 
     public ItemSSBlock(Block block)

@@ -48,10 +48,10 @@ public class MessageSyncSeasonCycle implements IMessage, IMessageHandler<Message
         if (ctx.side == Side.CLIENT)
         {
             if (Minecraft.getMinecraft().player == null) return null;
-            int playerDimension = Minecraft.getMinecraft().player.dimension;
 
-            if (playerDimension == message.dimension)
-                SeasonHandler.clientSeasonCycleTicks.put(playerDimension, message.seasonCycleTicks);
+            // OPTIMIZATION: Always update the dimension tick cache, not just when player is in that dimension.
+            // This prevents stale data when the player travels between dimensions.
+            SeasonHandler.clientSeasonCycleTicks.put(message.dimension, message.seasonCycleTicks);
         }
         
         return null;
