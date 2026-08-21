@@ -26,6 +26,7 @@ import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.config.SeasonsConfig;
+import sereneseasons.core.SereneSeasons;
 import sereneseasons.handler.PacketHandler;
 import sereneseasons.network.message.MessageSyncSeasonCycle;
 import sereneseasons.season.SeasonASMHelper;
@@ -52,7 +53,17 @@ public class SeasonHandler implements SeasonHelper.ISeasonDataProvider
                 
             SeasonSavedData savedData = getSeasonSavedData(world);
 
-            if (++savedData.seasonCycleTicks >= SeasonTime.ZERO.getCycleDuration())
+            // BUG FIX: Get cycle duration and validate it's positive
+            int cycleDuration = SeasonTime.ZERO.getCycleDuration();
+            if (cycleDuration <= 0)
+            {
+                SereneSeasons.logger.warn("Invalid cycle duration: " + cycleDuration + ". Skipping season tick.");
+                return;
+            }
+
+            savedData.seasonCycleTicks++;
+            
+            if (savedData.seasonCycleTicks >= cycleDuration)
             {
                 savedData.seasonCycleTicks = 0;
             }
@@ -61,7 +72,7 @@ public class SeasonHandler implements SeasonHelper.ISeasonDataProvider
             {
                 sendSeasonUpdate(world);
                 // BUG FIX: Only mark dirty when sending updates (every 1 second) instead of every single tick
-                // This prevents massive disk I/O lag and unnecessary world saves.
+                // This prevents massive disk I/O lag and unnecessary world saves
                 savedData.markDirty();
             }
         }
@@ -105,8 +116,9 @@ public class SeasonHandler implements SeasonHelper.ISeasonDataProvider
         {
             clientSeasonCycleTicks.compute(dimension, (k, v) -> v == null ? 0 : v + 1);
         	
-            //Keep ticking as we're synchronized with the server only every second
-            if (clientSeasonCycleTicks.get(dimension) >= SeasonTime.ZERO.getCycleDuration())
+            //Keep moving forward since they are only synchronized with the server every second
+            int cycleDuration = SeasonTime.ZERO.getCycleDuration();
+            if (cycleDuration > 0 && clientSeasonCycleTicks.get(dimension) >= cycleDuration)
             {
                 clientSeasonCycleTicks.put(dimension, 0);
             }
