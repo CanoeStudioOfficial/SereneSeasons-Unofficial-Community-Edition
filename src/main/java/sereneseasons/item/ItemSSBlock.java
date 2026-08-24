@@ -30,7 +30,7 @@ public class ItemSSBlock extends ItemBlock
         this.setHasSubtypes(true);
     }
 
-    // define the items which will appear in the creative tab (called by ItemBlock class)
+
     @Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems)

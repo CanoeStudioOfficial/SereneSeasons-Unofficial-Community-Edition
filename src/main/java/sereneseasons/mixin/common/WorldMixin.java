@@ -21,9 +21,9 @@ public abstract class WorldMixin {
     )
     public void injectSeasonalCelestialAngle(float partialTicks, CallbackInfoReturnable<Float> cir) {
         World world = (World) (Object) this;
-        // OPTIMIZATION: Skip if dimension is not whitelisted to prevent messing with modded dimensions/Nether/End
+
         if (!SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension())) return;
-        
+
         cir.setReturnValue(SeasonalCelestialAngle.calculate(world, world.getWorldTime(), partialTicks));
     }
 

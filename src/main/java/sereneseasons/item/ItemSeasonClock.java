@@ -1,8 +1,8 @@
 /*******************************************************************************
  * Copyright 2016, the Biomes O' Plenty Team
- * 
+ *
  * This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License.
- * 
+ *
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/.
  ******************************************************************************/
 package sereneseasons.item;
@@ -26,8 +26,8 @@ import java.util.Map;
 
 public class ItemSeasonClock extends Item
 {
-    // BUG FIX: Store animation state per-world instead of globally.
-    // The original code had all clocks share the same animation state, causing them to sync incorrectly.
+
+
     private final Map<Integer, ClockAnimationState> animationStates = new HashMap<>();
 
     public ItemSeasonClock()
@@ -52,7 +52,7 @@ public class ItemSeasonClock extends Item
                 else
                 {
                     double d0;
-                    
+
                     if (SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension()))
                     {
                         int seasonCycleTicks = SeasonHelper.getSeasonState(world).getSeasonCycleTicks();
@@ -62,7 +62,7 @@ public class ItemSeasonClock extends Item
                     {
                         d0 = Math.random();
                     }
-                    
+
                     int dimension = world.provider.getDimension();
                     ClockAnimationState state = animationStates.computeIfAbsent(dimension, k -> new ClockAnimationState());
                     d0 = state.actualFrame(world, d0);

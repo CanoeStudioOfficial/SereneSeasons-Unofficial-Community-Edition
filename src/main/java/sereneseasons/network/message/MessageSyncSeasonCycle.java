@@ -1,8 +1,8 @@
 /*******************************************************************************
  * Copyright 2016, the Biomes O' Plenty Team
- * 
+ *
  * This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License.
- * 
+ *
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/.
  ******************************************************************************/
 package sereneseasons.network.message;
@@ -19,24 +19,24 @@ public class MessageSyncSeasonCycle implements IMessage, IMessageHandler<Message
 {
     public int dimension;
     public int seasonCycleTicks;
-    
+
     public MessageSyncSeasonCycle() {}
-    
+
     public MessageSyncSeasonCycle(int dimension, int seasonCycleTicks)
     {
         this.dimension = dimension;
         this.seasonCycleTicks = seasonCycleTicks;
     }
-    
+
     @Override
-    public void fromBytes(ByteBuf buf) 
+    public void fromBytes(ByteBuf buf)
     {
         this.dimension = buf.readInt();
         this.seasonCycleTicks = buf.readInt();
     }
 
     @Override
-    public void toBytes(ByteBuf buf) 
+    public void toBytes(ByteBuf buf)
     {
         buf.writeInt(this.dimension);
         buf.writeInt(this.seasonCycleTicks);
@@ -49,11 +49,11 @@ public class MessageSyncSeasonCycle implements IMessage, IMessageHandler<Message
         {
             if (Minecraft.getMinecraft().player == null) return null;
 
-            // OPTIMIZATION: Always update the dimension tick cache, not just when player is in that dimension.
-            // This prevents stale data when the player travels between dimensions.
+
+
             SeasonHandler.clientSeasonCycleTicks.put(message.dimension, message.seasonCycleTicks);
         }
-        
+
         return null;
     }
 }

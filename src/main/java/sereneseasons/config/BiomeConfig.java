@@ -21,7 +21,7 @@ import java.util.Map;
 
 public class BiomeConfig
 {
-    // We use a HashMap for maximum performance as JsonUtil#getOrCreateConfigFile will return a LinkedHashMap
+
     public static final Map<ResourceLocation, BiomeData> biomeDataMap = Maps.newHashMap();
 
     public static void init(File configDir)
@@ -37,8 +37,8 @@ public class BiomeConfig
 
         if (tmpBiomeDataMap != null && !tmpBiomeDataMap.isEmpty())
         {
-            // We convert our keys to ResourceLocations here as to avoid calling `ResourceLocation#toString()` everywhere
-            // This reduces CPU overhead and garbage collector pressure
+
+
             for (Map.Entry<String, BiomeData> entry : tmpBiomeDataMap.entrySet())
             {
                 biomeDataMap.put(new ResourceLocation(entry.getKey()), entry.getValue());
@@ -46,13 +46,13 @@ public class BiomeConfig
         }
     }
 
-    // OPTIMIZATION: Replaced containsKey() + get() with a single get() to halve the hash lookups.
-    // These methods are called thousands of times per tick, so this micro-optimization saves a lot of CPU time.
+
+
     public static boolean enablesSeasonalEffects(Biome biome)
     {
         ResourceLocation name = biome.getRegistryName();
         if (name == null) return true;
-        
+
         BiomeData data = biomeDataMap.get(name);
         return data == null || data.enableSeasonalEffects;
     }
@@ -61,7 +61,7 @@ public class BiomeConfig
     {
         ResourceLocation name = biome.getRegistryName();
         if (name == null) return false;
-        
+
         BiomeData data = biomeDataMap.get(name);
         return data != null && data.useTropicalSeasons;
     }
@@ -70,7 +70,7 @@ public class BiomeConfig
     {
         ResourceLocation name = biome.getRegistryName();
         if (name == null) return false;
-        
+
         BiomeData data = biomeDataMap.get(name);
         return data != null && data.disableCrops;
     }

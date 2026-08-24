@@ -29,7 +29,7 @@ public class BirchColorHandler
 	        public int colorMultiplier(IBlockState state, @Nullable IBlockAccess worldIn, @Nullable BlockPos pos, int tintIndex)
 	        {
 	            BlockPlanks.EnumType plankstype = state.getValue(BlockOldLeaf.VARIANT);
-	            
+
 	            if (plankstype == BlockPlanks.EnumType.SPRUCE)
 	            {
 	                return ColorizerFoliage.getFoliageColorPine();
@@ -37,25 +37,25 @@ public class BirchColorHandler
 	            else if (plankstype == BlockPlanks.EnumType.BIRCH)
 	            {
 	            	int birchColor = ColorizerFoliage.getFoliageColorBirch();
-	            	
-	            	// BUG FIX: Prevent NullPointerException when player is null (e.g., in main menu or loading screens)
+
+
 	            	EntityPlayer player = Minecraft.getMinecraft().player;
 	            	if (player == null) return birchColor;
-	            	
+
 	            	int dimension = player.dimension;
-	            	
+
 	            	if (worldIn != null && pos != null && ModConfig.seasons.changeBirchColour && SeasonsConfig.isDimensionWhitelisted(dimension))
 	            	{
 	            		Biome biome = worldIn.getBiome(pos);
-	            		
+
 	            		if (BiomeConfig.enablesSeasonalEffects(biome))
 	            		{
 		            		SeasonTime calendar = SeasonHandler.getClientSeasonTime();
 			                ISeasonColorProvider colorProvider = BiomeConfig.usesTropicalSeasons(biome) ? calendar.getTropicalSeason() : calendar.getSubSeason();
-			                birchColor = colorProvider.getBirchColor(); 
+			                birchColor = colorProvider.getBirchColor();
 	            		}
 	            	}
-	            	
+
 	                return birchColor;
 	            }
 	            else

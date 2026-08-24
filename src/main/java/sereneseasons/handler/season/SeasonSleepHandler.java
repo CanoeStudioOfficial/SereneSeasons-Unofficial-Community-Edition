@@ -1,8 +1,8 @@
 /*******************************************************************************
  * Copyright 2016, the Biomes O' Plenty Team
- * 
+ *
  * This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License.
- * 
+ *
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/.
  ******************************************************************************/
 package sereneseasons.handler.season;
@@ -16,19 +16,19 @@ import sereneseasons.api.config.SeasonsOption;
 import sereneseasons.api.config.SyncedConfig;
 import sereneseasons.season.SeasonSavedData;
 
-public class SeasonSleepHandler 
+public class SeasonSleepHandler
 {
     @SubscribeEvent
     public void onWorldTick(TickEvent.WorldTickEvent event)
     {
-        // BUG FIX: Removed the '!' (NOT) operator. 
-        // The original code advanced the season ONLY when the config option was DISABLED.
-        // Now it correctly advances the season when the config option is ENABLED.
+
+
+
         if (event.phase == Phase.START && event.side == Side.SERVER && SyncedConfig.getBooleanValue(SeasonsOption.ADVANCE_SEASON_WHILE_SLEEPING))
         {
             WorldServer world = (WorldServer)event.world;
 
-            // Called before all players are awoken for the next day
+
             if (world.areAllPlayersAsleep())
             {
                 SeasonSavedData seasonData = SeasonHandler.getSeasonSavedData(world);

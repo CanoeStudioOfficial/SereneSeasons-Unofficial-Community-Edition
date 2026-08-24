@@ -40,12 +40,12 @@ public class ClientProxy extends CommonProxy
         {
             ISSBlock bopBlock = (ISSBlock) block;
 
-            //Register non-rendering properties
+
             IProperty[] nonRenderingProperties = bopBlock.getNonRenderingProperties();
 
             if (nonRenderingProperties != null)
             {
-                // use a custom state mapper which will ignore the properties specified in the block as being non-rendering
+
                 IStateMapper custom_mapper = (new StateMap.Builder()).ignore(nonRenderingProperties).build();
                 ModelLoader.setCustomStateMapper(block, custom_mapper);
             }
@@ -55,7 +55,7 @@ public class ClientProxy extends CommonProxy
     @Override
     public void registerItemSided(Item item)
     {
-        // register sub types if there are any
+
         if (item.getHasSubtypes())
         {
             NonNullList<ItemStack> subItems = NonNullList.create();
@@ -63,7 +63,7 @@ public class ClientProxy extends CommonProxy
             for (ItemStack subItem : subItems)
             {
                 String subItemName = item.getTranslationKey(subItem);
-                subItemName =  subItemName.substring(subItemName.indexOf(".") + 1); // remove 'item.' from the front
+                subItemName =  subItemName.substring(subItemName.indexOf(".") + 1);
 
                 ModelLoader.registerItemVariants(item, new ResourceLocation(SereneSeasons.MOD_ID, subItemName));
                 ModelLoader.setCustomModelResourceLocation(item, subItem.getMetadata(), new ModelResourceLocation(SereneSeasons.MOD_ID + ":" + subItemName, "inventory"));

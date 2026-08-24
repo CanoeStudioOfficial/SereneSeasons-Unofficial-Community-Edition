@@ -1,8 +1,8 @@
 /*******************************************************************************
  * Copyright 2016, the Biomes O' Plenty Team
- * 
+ *
  * This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License.
- * 
+ *
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/.
  ******************************************************************************/
 package sereneseasons.block;
@@ -23,7 +23,7 @@ import java.util.Random;
 
 public class BlockGreenhouseGlass extends BlockBreakable implements ISSBlock
 {
-    // implement ISSBlock
+
     @Override
     public Class<? extends ItemBlock> getItemClass() { return ItemSSBlock.class; }
     @Override
@@ -32,7 +32,7 @@ public class BlockGreenhouseGlass extends BlockBreakable implements ISSBlock
     public IProperty[] getNonRenderingProperties() { return null; }
     @Override
     public String getStateName(IBlockState state) { return ""; }
-    
+
     public BlockGreenhouseGlass()
     {
         super(Material.GLASS, false);
@@ -40,20 +40,20 @@ public class BlockGreenhouseGlass extends BlockBreakable implements ISSBlock
         this.setHarvestLevel("pickaxe", 0);
         this.setSoundType(SoundType.GLASS);
     }
-    
-    /**
-     * Returns the quantity of items to drop on block destruction.
-     */
+
+
+
+
     @Override
     public int quantityDropped(Random random)
     {
         return 0;
     }
 
-    /**
-     * Gets the render layer this block will render on. SOLID for solid blocks, CUTOUT or CUTOUT_MIPPED for on-off
-     * transparency (glass, reeds), TRANSLUCENT for fully blended transparency (stained glass)
-     */
+
+
+
+
     @Override
     @SideOnly(Side.CLIENT)
     public BlockRenderLayer getRenderLayer()

@@ -1,8 +1,8 @@
 /*******************************************************************************
  * Copyright 2016, the Biomes O' Plenty Team
- * 
+ *
  * This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License.
- * 
+ *
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/.
  ******************************************************************************/
 package sereneseasons.block;
@@ -42,7 +42,7 @@ public class BlockSeasonSensor extends BlockContainer implements ISSBlock
     public static final PropertyInteger POWER = PropertyInteger.create("power", 0, 15);
     public static final AxisAlignedBB BOUNDING_BOX = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.375D, 1.0D);
 
-    // implement ITANBlock
+
     @Override
     public Class<? extends ItemBlock> getItemClass() { return ItemSSBlock.class; }
     @Override
@@ -54,18 +54,18 @@ public class BlockSeasonSensor extends BlockContainer implements ISSBlock
     {
         return type.getName();
     }
-    
+
     private final DetectorType type;
-    
+
     public BlockSeasonSensor(DetectorType type)
     {
         super(Material.WOOD);
         this.type = type;
         this.setHardness(0.2F);
         this.setSoundType(SoundType.WOOD);
-        this.setDefaultState(this.blockState.getBaseState().withProperty(POWER, 0));        
+        this.setDefaultState(this.blockState.getBaseState().withProperty(POWER, 0));
     }
-    
+
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos)
     {
@@ -81,8 +81,8 @@ public class BlockSeasonSensor extends BlockContainer implements ISSBlock
     public void updatePower(World world, BlockPos pos)
     {
         IBlockState currentState = world.getBlockState(pos);
-        
-        // BUG FIX: If the dimension is not whitelisted, turn off the redstone signal instead of freezing it
+
+
         if (!SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension()))
         {
             if (currentState.getValue(POWER) != 0)
@@ -96,14 +96,14 @@ public class BlockSeasonSensor extends BlockContainer implements ISSBlock
         int startTicks = this.type.ordinal() * SeasonTime.ZERO.getSeasonDuration();
         int endTicks = (this.type.ordinal() + 1) * SeasonTime.ZERO.getSeasonDuration();
         int currentTicks = SeasonHelper.getSeasonState(world).getSeasonCycleTicks();
-        
+
         if (currentTicks >= startTicks && currentTicks <= endTicks)
         {
             float delta = (float)(currentTicks - startTicks) / (float)SeasonTime.ZERO.getSeasonDuration();
             power = (int)Math.min(delta * 15.0F + 1.0F, 15.0F);
         }
-        
-        // Only update the state if the power level has actually changed
+
+
         if (currentState.getValue(POWER) != power)
         {
             world.setBlockState(pos, currentState.withProperty(POWER, power), 3);
@@ -122,10 +122,10 @@ public class BlockSeasonSensor extends BlockContainer implements ISSBlock
             else
             {
                 Block nextBlock = SSBlocks.season_sensors[(this.type.ordinal() + 1) % DetectorType.values().length];
-                
-                // BUG FIX: Changed flag from 4 to 3. 
-                // Flag 4 only notifies clients, ignoring neighbor updates. This caused redstone circuits to not 
-                // register the power change when cycling the sensor by right-clicking it.
+
+
+
+
                 world.setBlockState(pos, nextBlock.getDefaultState().withProperty(POWER, state.getValue(POWER)), 3);
                 ((BlockSeasonSensor)nextBlock).updatePower(world, pos);
                 return true;
@@ -173,25 +173,25 @@ public class BlockSeasonSensor extends BlockContainer implements ISSBlock
         return new TileEntitySeasonSensor();
     }
 
-    // map from state to meta and vice verca
+
     @Override
     public IBlockState getStateFromMeta(int meta)
     {
         return this.getDefaultState().withProperty(POWER, meta);
     }
-    
+
     @Override
     public int getMetaFromState(IBlockState state)
     {
         return state.getValue(POWER);
     }
-    
+
     @Override
     protected BlockStateContainer createBlockState()
     {
         return new BlockStateContainer(this, POWER);
     }
-    
+
     public static enum DetectorType implements IStringSerializable
     {
         SPRING, SUMMER, AUTUMN, WINTER;
