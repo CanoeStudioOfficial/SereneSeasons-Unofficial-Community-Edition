@@ -1,12 +1,12 @@
 package sereneseasons.handler;
 
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
-import sereneseasons.core.SereneSeasons;
 import sereneseasons.api.config.SyncedConfig;
+import sereneseasons.core.SereneSeasons;
 import sereneseasons.network.message.MessageSyncConfigs;
 import sereneseasons.network.message.MessageSyncSeasonCycle;
 

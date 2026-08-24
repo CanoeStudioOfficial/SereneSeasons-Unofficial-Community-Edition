@@ -21,7 +21,10 @@ public class SeasonSleepHandler
     @SubscribeEvent
     public void onWorldTick(TickEvent.WorldTickEvent event)
     {
-        if (event.phase == Phase.START && event.side == Side.SERVER && (!SyncedConfig.getBooleanValue(SeasonsOption.ADVANCE_SEASON_WHILE_SLEEPING)))
+        // BUG FIX: Removed the '!' (NOT) operator. 
+        // The original code advanced the season ONLY when the config option was DISABLED.
+        // Now it correctly advances the season when the config option is ENABLED.
+        if (event.phase == Phase.START && event.side == Side.SERVER && SyncedConfig.getBooleanValue(SeasonsOption.ADVANCE_SEASON_WHILE_SLEEPING))
         {
             WorldServer world = (WorldServer)event.world;
 

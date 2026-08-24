@@ -46,40 +46,33 @@ public class BiomeConfig
         }
     }
 
+    // OPTIMIZATION: Replaced containsKey() + get() with a single get() to halve the hash lookups.
+    // These methods are called thousands of times per tick, so this micro-optimization saves a lot of CPU time.
     public static boolean enablesSeasonalEffects(Biome biome)
     {
         ResourceLocation name = biome.getRegistryName();
-
-        if (biomeDataMap.containsKey(name))
-        {
-            return biomeDataMap.get(name).enableSeasonalEffects;
-        }
-
-        return true;
+        if (name == null) return true;
+        
+        BiomeData data = biomeDataMap.get(name);
+        return data == null || data.enableSeasonalEffects;
     }
 
     public static boolean usesTropicalSeasons(Biome biome)
     {
         ResourceLocation name = biome.getRegistryName();
-
-        if (biomeDataMap.containsKey(name))
-        {
-            return biomeDataMap.get(name).useTropicalSeasons;
-        }
-
-        return false;
+        if (name == null) return false;
+        
+        BiomeData data = biomeDataMap.get(name);
+        return data != null && data.useTropicalSeasons;
     }
 
     public static boolean disablesCrops(Biome biome)
     {
         ResourceLocation name = biome.getRegistryName();
-
-        if (biomeDataMap.containsKey(name))
-        {
-            return biomeDataMap.get(name).disableCrops;
-        }
-
-        return false;
+        if (name == null) return false;
+        
+        BiomeData data = biomeDataMap.get(name);
+        return data != null && data.disableCrops;
     }
 
     private static void addBlacklistedBiomes(Map<String, BiomeData> map)

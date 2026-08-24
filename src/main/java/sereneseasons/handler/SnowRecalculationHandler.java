@@ -19,178 +19,240 @@ import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.config.FertilityConfig;
 import sereneseasons.data.TimeStampsWorldSavedData;
 
-import java.util.ArrayList;
-
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SnowRecalculationHandler {
 
-    private static ArrayList<Chunk> recalculationQueue = new ArrayList<Chunk>();
+    // OPTIMIZATION: Replaced ArrayList with ArrayDeque. 
+    // ArrayList.remove(int) is O(N) and shifts elements, causing lag. ArrayDeque is O(1) for queues.
+    private static final Deque<Chunk> recalculationQueue = new ArrayDeque<>();
+    
+    // Track last known chunk position of each player
+    private static final Map<String, Long> playerLastChunkPos = new HashMap<>();
+    
+    // Cooldown to avoid spamming recalculation
+    private static int recalculationCooldown = 0;
+    private static final int RECALCULATION_INTERVAL = 200; // Check every 10 seconds
 
     @SubscribeEvent
     public void onTick(TickEvent.WorldTickEvent event) {
-        Type type = event.type;
-        Side side = event.side;
-        Phase phase = event.phase;
+        // OPTIMIZATION: Fail fast checks consolidated
+        if (event.type != Type.WORLD || event.side != Side.SERVER || event.phase != Phase.END) {
+            return;
+        }
+        
         World world = event.world;
-        if (world.provider.getDimension() != 0) {
+        if (world.isRemote || world.provider.getDimension() != 0) {
             return;
         }
-        if (!(type == Type.WORLD && side == Side.SERVER)) {
+        
+        if (!FertilityConfig.general_category.shouldRecalculateSnow) {
             return;
         }
-        if (world.isRemote) {
+        
+        // Check for player movement every 10 seconds
+        recalculationCooldown--;
+        if (recalculationCooldown <= 0) {
+            recalculationCooldown = RECALCULATION_INTERVAL;
+            checkPlayerMovement(world);
+        }
+        
+        if (recalculationQueue.isEmpty()) {
             return;
         }
-        if (recalculationQueue.size() == 0) {
-            return;
-        }
-        int i = 0;
-        int c = 0;
-        while (recalculationQueue.size() > i && c < 20) {
-            Chunk chunk = recalculationQueue.get(i);
-            if (chunk.isLoaded() && chunk.isPopulated()) {
-                boolean success = true;
-                BlockPos pos = new BlockPos(chunk.x*16, 0, chunk.z*16);
-                for (int k2 = 0; k2 < 16; ++k2) {
-                    for (int j3 = 0; j3 < 16; ++j3) {
-                        BlockPos blockpos1 = chunk.getPrecipitationHeight(pos.add(k2, 0, j3));
-                        BlockPos blockpos2 = blockpos1.down();
 
-                        if (world.canBlockFreezeWater(blockpos2)) {
-                            success = success && world.setBlockState(blockpos2, Blocks.ICE.getDefaultState(), 2);
-                        }
+        int processed = 0;
+        // OPTIMIZATION: Cache SubSeason outside the loop. 
+        // Originally, SeasonHelper.getSeasonState was called 256 times per chunk!
+        SubSeason subSeason = SeasonHelper.getSeasonState(world).getSubSeason();
+        int currentTime = (int) (System.currentTimeMillis() / 1000 / 60);
 
-                        if (world.canSnowAt(blockpos1, true)) {
-                            success = success && world.setBlockState(blockpos1, Blocks.SNOW_LAYER.getDefaultState(), 2);
-                        }
+        while (!recalculationQueue.isEmpty() && processed < 20) {
+            Chunk chunk = recalculationQueue.poll();
+            
+            if (!chunk.isLoaded() || !chunk.isPopulated()) {
+                continue;
+            }
 
-                        if (shouldMelt(world, blockpos2)) {
-                            if (world.getBlockState(blockpos2).getBlock() == Blocks.ICE) {
-                                success = success && world.setBlockState(blockpos2, Blocks.WATER.getDefaultState(), 2);
-                            }
-                            if (world.getBlockState(blockpos1).getBlock() == Blocks.SNOW_LAYER) {
-                                success = success && world.setBlockState(blockpos1, Blocks.AIR.getDefaultState(), 2);
-                            }
+            boolean success = processChunk(world, chunk, subSeason);
+            
+            if (success) {
+                processed++;
+                // BUG FIX: Update timestamp ONLY when successfully processed
+                TimeStampsWorldSavedData.setChunkTimeStamp(chunk, currentTime);
+            } else {
+                // If it failed, put it back at the end of the queue to retry later
+                recalculationQueue.offer(chunk);
+            }
+        }
+    }
+    
+    /**
+     * Detect when players move to new areas and force recalculation
+     */
+    private void checkPlayerMovement(World world) {
+        int currentTime = (int) (System.currentTimeMillis() / 1000 / 60);
+        
+        for (EntityPlayer player : world.playerEntities) {
+            int playerChunkX = (int) player.posX / 16;
+            int playerChunkZ = (int) player.posZ / 16;
+            long currentChunkKey = (((long) playerChunkX) << 32) | (playerChunkZ & 0xFFFFFFFFL);
+            
+            String playerName = player.getName();
+            Long lastChunkKey = playerLastChunkPos.get(playerName);
+            
+            // Player moved to a new chunk OR first time checking
+            if (lastChunkKey == null || lastChunkKey != currentChunkKey) {
+                playerLastChunkPos.put(playerName, currentChunkKey);
+                
+                // Schedule chunks around the player for recalculation
+                scheduleChunksAroundPlayer(world, playerChunkX, playerChunkZ, currentTime);
+            }
+        }
+        
+        // Clean up disconnected players
+        playerLastChunkPos.keySet().removeIf(name -> 
+            world.playerEntities.stream().noneMatch(p -> p.getName().equals(name))
+        );
+    }
+    
+    /**
+     * Schedule all chunks in a radius for recalculation
+     * This handles spawn chunks and chunks that were already loaded
+     */
+    private void scheduleChunksAroundPlayer(World world, int centerChunkX, int centerChunkZ, int currentTime) {
+        int radius = 5; // 11x11 chunks (176x176 blocks)
+        
+        for (int x = -radius; x <= radius; x++) {
+            for (int z = -radius; z <= radius; z++) {
+                int chunkX = centerChunkX + x;
+                int chunkZ = centerChunkZ + z;
+                
+                // Check if chunk is loaded without forcing it to load
+                Chunk chunk = world.getChunkProvider().getLoadedChunk(chunkX, chunkZ);
+                
+                if (chunk != null && chunk.isLoaded() && chunk.isPopulated()) {
+                    int savedTime = TimeStampsWorldSavedData.getChunkTimeStamp(chunk);
+                    
+                    // Recalculate if enough time has passed
+                    if (currentTime - savedTime > FertilityConfig.general_category.timeToRecalculateSnow) {
+                        if (!recalculationQueue.contains(chunk)) {
+                            recalculationQueue.offer(chunk);
                         }
                     }
                 }
-                if (success) {
-                    recalculationQueue.remove(i);
-                    c++;
-                } else {
-                    i++;
-                }
-            } else {
-                i++;
             }
         }
+    }
 
+    private boolean processChunk(World world, Chunk chunk, SubSeason subSeason) {
+        boolean success = true;
+        int baseX = chunk.x * 16;
+        int baseZ = chunk.z * 16;
+        
+        // OPTIMIZATION: Reusable BlockPos to avoid massive GC (Garbage Collection) pressure.
+        // Prevents creating 256+ BlockPos objects per chunk per tick.
+        BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
+        
+        for (int k2 = 0; k2 < 16; ++k2) {
+            for (int j3 = 0; j3 < 16; ++j3) {
+                mutablePos.setPos(baseX + k2, 0, baseZ + j3);
+                BlockPos blockpos1 = chunk.getPrecipitationHeight(mutablePos);
+                BlockPos blockpos2 = blockpos1.down();
+
+                // BUG FIX: Use &= instead of && to prevent short-circuiting.
+                // Original code skipped placing snow/ice for the rest of the chunk if ONE block failed.
+                if (world.canBlockFreezeWater(blockpos2)) {
+                    success &= world.setBlockState(blockpos2, Blocks.ICE.getDefaultState(), 2);
+                }
+
+                if (world.canSnowAt(blockpos1, true)) {
+                    success &= world.setBlockState(blockpos1, Blocks.SNOW_LAYER.getDefaultState(), 2);
+                }
+
+                if (shouldMelt(world, blockpos2, subSeason)) {
+                    if (world.getBlockState(blockpos2).getBlock() == Blocks.ICE) {
+                        success &= world.setBlockState(blockpos2, Blocks.WATER.getDefaultState(), 2);
+                    }
+                    if (world.getBlockState(blockpos1).getBlock() == Blocks.SNOW_LAYER) {
+                        success &= world.setBlockState(blockpos1, Blocks.AIR.getDefaultState(), 2);
+                    }
+                }
+            }
+        }
+        return success;
     }
 
     @SubscribeEvent
     public void onChunkLoaded(ChunkEvent.Load event) {
-        if(!FertilityConfig.General.shouldRecalculateSnow) {
+        if (!FertilityConfig.general_category.shouldRecalculateSnow) {
             return;
         }
         World world = event.getWorld();
-        if (world.isRemote) {
+        if (world.isRemote || world.provider.getDimension() != 0) {
             return;
         }
+        
         Chunk chunk = event.getChunk();
-        if (world.provider.getDimension() != 0) {
-            return;
-        }
-        int currentTime = (int) (System.currentTimeMillis()/1000/60);
+        int currentTime = (int) (System.currentTimeMillis() / 1000 / 60);
         int savedTime = TimeStampsWorldSavedData.getChunkTimeStamp(chunk);
-        if (currentTime - savedTime > FertilityConfig.General.timeToRecalculateSnow) {
-            recalculationQueue.add(chunk);
+        
+        if (currentTime - savedTime > FertilityConfig.general_category.timeToRecalculateSnow) {
+            recalculationQueue.offer(chunk);
         }
     }
 
     @SubscribeEvent
     public void playerJoinedWorld(PlayerEvent.PlayerLoggedInEvent event) {
-        if(!FertilityConfig.General.shouldRecalculateSnow) {
+        if(!FertilityConfig.general_category.shouldRecalculateSnow) {
             return;
         }
         EntityPlayer player = event.player;
         World world = player.world;
-        if (world.provider.getDimension() != 0) {
+        if (world.isRemote || world.provider.getDimension() != 0) {
             return;
         }
-        if (world.isRemote) {
-            return;
-        }
-        for (int i = -5; i < 5; i++) {
-            for (int j = -5; j < 5; j++) {
-                Chunk chunk = world.getChunk(((int)player.posX/16) + i, ((int)player.posZ/16) + j);
-                int currentTime = (int) (System.currentTimeMillis()/1000/60);
-                int savedTime = TimeStampsWorldSavedData.getChunkTimeStamp(chunk);
-                if (currentTime - savedTime > FertilityConfig.General.timeToRecalculateSnow) {
-                    recalculationQueue.add(chunk);
-                }
-            }
-        }
+        
+        // Force recalculation around player spawn
+        int currentTime = (int) (System.currentTimeMillis() / 1000 / 60);
+        int playerChunkX = (int) player.posX / 16;
+        int playerChunkZ = (int) player.posZ / 16;
+        
+        scheduleChunksAroundPlayer(world, playerChunkX, playerChunkZ, currentTime);
     }
 
     @SubscribeEvent
     public void onChunkUnLoaded(ChunkEvent.Unload event) {
         World world = event.getWorld();
-        if (world.isRemote) {
+        if (world.isRemote || world.provider.getDimension() != 0) {
             return;
         }
+        
         Chunk chunk = event.getChunk();
-        if (world.provider.getDimension() != 0) {
-            return;
-        }
-        if(!removeFromRecalculationQueue(chunk)) {
-            int currentTime = (int) (System.currentTimeMillis()/1000/60);
-            TimeStampsWorldSavedData.setChunkTimeStamp(chunk, currentTime);
-        }
+        removeFromRecalculationQueue(chunk);
+        // BUG FIX: Removed incorrect timestamp update here
+        // Timestamps should only be updated when recalculation actually succeeds, not just because a chunk unloaded
     }
 
     @SubscribeEvent
     public void playerLeftWorld(PlayerEvent.PlayerLoggedOutEvent event) {
         EntityPlayer player = event.player;
-        World world = player.world;
-        if (world.provider.getDimension() != 0) {
-            return;
-        }
-        if (world.isRemote) {
-            return;
-        }
-        int currentTime = (int) (System.currentTimeMillis()/1000/60);
-        for (int i = -5; i < 5; i++) {
-            for (int j = -5; j < 5; j++) {
-                Chunk chunk = world.getChunk(((int)player.posX/16) + i, ((int)player.posZ/16) + j);
-                if(!removeFromRecalculationQueue(chunk)) {
-                    TimeStampsWorldSavedData.setChunkTimeStamp(chunk, currentTime);
-                }
-            }
-        }
+        
+        // Remove player from tracking
+        playerLastChunkPos.remove(player.getName());
     }
 
-    private boolean shouldMelt(World world, BlockPos pos) {
+    private boolean shouldMelt(World world, BlockPos pos, SubSeason subSeason) {
         Biome biome = world.getBiome(pos);
-        SubSeason subSeason = SeasonHelper.getSeasonState(world).getSubSeason();
         float f = BiomeHooks.getFloatTemperature(subSeason, biome, pos);
-
-        if (f >= 0.15F)
-        {
-            return true;
-        }
-        return false;
+        return f >= 0.15F;
     }
 
+    // OPTIMIZATION: Simplified removal using Deque's built-in remove(Object)
     private boolean removeFromRecalculationQueue(Chunk chunk) {
-        for (int i = 0; i < recalculationQueue.size(); i++) {
-            Chunk queueChunk = recalculationQueue.get(i);
-            if (chunk.getPos().x == queueChunk.getPos().x && chunk.getPos().z == queueChunk.getPos().z) {
-                recalculationQueue.remove(i);
-                i--;
-                return true;
-            }
-        }
-        return false;
-    };
-
+        return recalculationQueue.remove(chunk);
+    }
 }

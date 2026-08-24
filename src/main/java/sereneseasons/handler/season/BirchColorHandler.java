@@ -5,6 +5,7 @@ import net.minecraft.block.BlockPlanks;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.color.IBlockColor;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ColorizerFoliage;
@@ -27,7 +28,7 @@ public class BirchColorHandler
 	    {
 	        public int colorMultiplier(IBlockState state, @Nullable IBlockAccess worldIn, @Nullable BlockPos pos, int tintIndex)
 	        {
-	            BlockPlanks.EnumType plankstype = (BlockPlanks.EnumType)state.getValue(BlockOldLeaf.VARIANT);
+	            BlockPlanks.EnumType plankstype = state.getValue(BlockOldLeaf.VARIANT);
 	            
 	            if (plankstype == BlockPlanks.EnumType.SPRUCE)
 	            {
@@ -36,7 +37,12 @@ public class BirchColorHandler
 	            else if (plankstype == BlockPlanks.EnumType.BIRCH)
 	            {
 	            	int birchColor = ColorizerFoliage.getFoliageColorBirch();
-	            	int dimension = Minecraft.getMinecraft().player.dimension;
+	            	
+	            	// BUG FIX: Prevent NullPointerException when player is null (e.g., in main menu or loading screens)
+	            	EntityPlayer player = Minecraft.getMinecraft().player;
+	            	if (player == null) return birchColor;
+	            	
+	            	int dimension = player.dimension;
 	            	
 	            	if (worldIn != null && pos != null && ModConfig.seasons.changeBirchColour && SeasonsConfig.isDimensionWhitelisted(dimension))
 	            	{

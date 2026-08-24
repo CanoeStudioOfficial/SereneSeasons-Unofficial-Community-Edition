@@ -6,17 +6,12 @@ import net.minecraft.block.properties.IProperty;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.statemap.IStateMapper;
 import net.minecraft.client.renderer.block.statemap.StateMap;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.entity.Entity;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
-import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import sereneseasons.api.ISSBlock;
 import sereneseasons.core.SereneSeasons;
 import sereneseasons.util.inventory.CreativeTabSS;
@@ -77,42 +72,6 @@ public class ClientProxy extends CommonProxy
         else
         {
             ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(SereneSeasons.MOD_ID + ":" + item.delegate.name().getPath(), "inventory"));
-        }
-    }
-    
-    // 
-    // The below method and class is used as part of Forge 1668+'s workaround for render manager being null during preinit
-    //
-
-    private static <E extends Entity> void registerEntityRenderer(Class<E> entityClass, Class<? extends Render<E>> renderClass)
-    {
-        RenderingRegistry.registerEntityRenderingHandler(entityClass, new EntityRenderFactory<E>(renderClass));
-    }
-
-    private static class EntityRenderFactory<E extends Entity> implements IRenderFactory<E>
-    {
-        private Class<? extends Render<E>> renderClass;
-
-        private EntityRenderFactory(Class<? extends Render<E>> renderClass)
-        {
-            this.renderClass = renderClass;
-        }
-
-        @Override
-        public Render<E> createRenderFor(RenderManager manager) 
-        {
-            Render<E> renderer = null;
-
-            try 
-            {
-                renderer = renderClass.getConstructor(RenderManager.class).newInstance(manager);
-            } 
-            catch (Exception e) 
-            {
-                e.printStackTrace();
-            }
-
-            return renderer;
         }
     }
 

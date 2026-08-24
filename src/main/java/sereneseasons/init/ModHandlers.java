@@ -7,6 +7,7 @@
  ******************************************************************************/
 package sereneseasons.init;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.world.biome.BiomeColorHelper;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -34,9 +35,7 @@ public class ModHandlers
         SeasonHelper.dataProvider = SEASON_HANDLER;
         
         MinecraftForge.EVENT_BUS.register(new RandomUpdateHandler());
-        
         MinecraftForge.EVENT_BUS.register(new SeasonSleepHandler());
-        
         MinecraftForge.EVENT_BUS.register(new SeasonalCropGrowthHandler());
 
         if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT)
@@ -50,6 +49,29 @@ public class ModHandlers
     @SideOnly(Side.CLIENT)
     private static BiomeColorHelper.ColorResolver originalFoliageColorResolver;
 
+    // OPTIMIZATION: Cache the current color provider to prevent creating new SeasonTime objects 
+    // and doing math thousands of times per frame in the render thread.
+    @SideOnly(Side.CLIENT)
+    private static ISeasonColorProvider cachedColorProvider;
+    @SideOnly(Side.CLIENT)
+    private static int cachedClientTick = -1;
+
+    @SideOnly(Side.CLIENT)
+    private static ISeasonColorProvider getCachedColorProvider()
+    {
+        int currentTick = SeasonHandler.clientSeasonCycleTicks.getOrDefault(Minecraft.getMinecraft().player.dimension, 0);
+        if (currentTick != cachedClientTick)
+        {
+            cachedClientTick = currentTick;
+            SeasonTime calendar = new SeasonTime(currentTick);
+            // We assume the biome is not tropical for the global cache, but the lambda will handle tropical biomes correctly
+            // Actually, we need to cache both or just let the lambda do the fast lookup.
+            // To keep it simple and fast, we just cache the standard sub-season.
+            cachedColorProvider = calendar.getSubSeason();
+        }
+        return cachedColorProvider;
+    }
+
     @SideOnly(Side.CLIENT)
     private static void registerSeasonColourHandlers()
     {
@@ -58,15 +80,20 @@ public class ModHandlers
 
         BiomeColorHelper.GRASS_COLOR = (biome, blockPosition) ->
         {
-            SeasonTime calendar = SeasonHandler.getClientSeasonTime();
-            ISeasonColorProvider colorProvider = BiomeConfig.usesTropicalSeasons(biome) ? calendar.getTropicalSeason() : calendar.getSubSeason();
+            // OPTIMIZATION: Use cached provider for standard seasons, only calculate tropical if needed
+            ISeasonColorProvider colorProvider = BiomeConfig.usesTropicalSeasons(biome) 
+                    ? new SeasonTime(SeasonHandler.clientSeasonCycleTicks.getOrDefault(Minecraft.getMinecraft().player.dimension, 0)).getTropicalSeason() 
+                    : getCachedColorProvider();
+                    
             return SeasonColourUtil.applySeasonalGrassColouring(colorProvider, biome, originalGrassColorResolver.getColorAtPos(biome, blockPosition));
         };
 
         BiomeColorHelper.FOLIAGE_COLOR = (biome, blockPosition) ->
         {
-            SeasonTime calendar = SeasonHandler.getClientSeasonTime();
-            ISeasonColorProvider colorProvider = BiomeConfig.usesTropicalSeasons(biome) ? calendar.getTropicalSeason() : calendar.getSubSeason();
+            ISeasonColorProvider colorProvider = BiomeConfig.usesTropicalSeasons(biome) 
+                    ? new SeasonTime(SeasonHandler.clientSeasonCycleTicks.getOrDefault(Minecraft.getMinecraft().player.dimension, 0)).getTropicalSeason() 
+                    : getCachedColorProvider();
+                    
             return SeasonColourUtil.applySeasonalFoliageColouring(colorProvider, biome, originalFoliageColorResolver.getColorAtPos(biome, blockPosition));
         };
     }

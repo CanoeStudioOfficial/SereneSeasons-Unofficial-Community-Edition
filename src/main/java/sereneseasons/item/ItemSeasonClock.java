@@ -21,18 +21,19 @@ import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.config.SeasonsConfig;
 import sereneseasons.season.SeasonTime;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class ItemSeasonClock extends Item
 {
+    // BUG FIX: Store animation state per-world instead of globally.
+    // The original code had all clocks share the same animation state, causing them to sync incorrectly.
+    private final Map<Integer, ClockAnimationState> animationStates = new HashMap<>();
+
     public ItemSeasonClock()
     {
         this.addPropertyOverride(new ResourceLocation("time"), new IItemPropertyGetter()
         {
-            @SideOnly(Side.CLIENT)
-            double field_185088_a;
-            @SideOnly(Side.CLIENT)
-            double field_185089_b;
-            @SideOnly(Side.CLIENT)
-            int ticks;
             @Override
             @SideOnly(Side.CLIENT)
             public float apply(ItemStack stack, World world, EntityLivingBase entity)
@@ -62,30 +63,40 @@ public class ItemSeasonClock extends Item
                         d0 = Math.random();
                     }
                     
-                    d0 = this.actualFrame(world, d0);
+                    int dimension = world.provider.getDimension();
+                    ClockAnimationState state = animationStates.computeIfAbsent(dimension, k -> new ClockAnimationState());
+                    d0 = state.actualFrame(world, d0);
                     return MathHelper.positiveModulo((float)d0, 1.0F);
                 }
             }
-            @SideOnly(Side.CLIENT)
-            private double actualFrame(World world, double frame)
+        });
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static class ClockAnimationState
+    {
+        private double field_185088_a;
+        private double field_185089_b;
+        private int ticks;
+
+        private double actualFrame(World world, double frame)
+        {
+            if (world.getTotalWorldTime() != this.ticks)
             {
-                if (world.getTotalWorldTime() != this.ticks)
+                this.ticks = (int)world.getTotalWorldTime();
+                double newFrame = frame - this.field_185088_a;
+
+                if (newFrame < -0.5D)
                 {
-                    this.ticks = (int)world.getTotalWorldTime();
-                    double newFrame = frame - this.field_185088_a;
-
-                    if (newFrame < -0.5D)
-                    {
-                        ++newFrame;
-                    }
-
-                    this.field_185089_b += newFrame * 0.1D;
-                    this.field_185089_b *= 0.9D;
-                    this.field_185088_a += this.field_185089_b;
+                    ++newFrame;
                 }
 
-                return this.field_185088_a;
+                this.field_185089_b += newFrame * 0.1D;
+                this.field_185089_b *= 0.9D;
+                this.field_185088_a += this.field_185089_b;
             }
-        });
+
+            return this.field_185088_a;
+        }
     }
 }

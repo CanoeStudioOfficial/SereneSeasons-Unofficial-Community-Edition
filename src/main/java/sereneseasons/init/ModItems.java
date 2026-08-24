@@ -16,14 +16,12 @@ public class ModItems
     public static void init()
     {
     	registerItems();
-        //setupModels();
     }
     
     public static void registerItems()
     {
     	// SS Creative Tab Icon
-    	ss_icon = registerItem(new Item(), "ss_icon");
-        ss_icon.setCreativeTab(null);
+    	ss_icon = registerItem(new Item(), "ss_icon", null); // Pass null to avoid creative tab
 
         // Main Items
         season_clock = registerItem(new ItemSeasonClock(), "season_clock");
@@ -37,9 +35,11 @@ public class ModItems
     public static Item registerItem(Item item, String name, CreativeTabs tab)
     {
         item.setTranslationKey(name);
+        
+        // BUG FIX: Actually use the 'tab' parameter instead of hardcoding CreativeTabSS.instance
         if (tab != null)
         {
-            item.setCreativeTab(CreativeTabSS.instance);
+            item.setCreativeTab(tab);
         }
 
         item.setRegistryName(new ResourceLocation(SereneSeasons.MOD_ID, name));

@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import sereneseasons.config.SeasonsConfig;
 import sereneseasons.season.SeasonASMHelper;
 
 @Mixin(EntityRenderer.class)
@@ -24,6 +25,7 @@ public abstract class EntityRendererMixin implements IResourceManagerReloadListe
             )
     )
     private boolean modifyCanRain(Biome instance) {
+        if (!SeasonsConfig.isDimensionWhitelisted(this.mc.world.provider.getDimension())) return instance.canRain();
         return SeasonASMHelper.shouldRenderRainSnow(this.mc.world, instance);
     }
 
@@ -35,6 +37,7 @@ public abstract class EntityRendererMixin implements IResourceManagerReloadListe
             )
     )
     private boolean redirectGetEnableSnow(Biome biome) {
+        if (!SeasonsConfig.isDimensionWhitelisted(this.mc.world.provider.getDimension())) return biome.getEnableSnow();
         return false;
     }
 
@@ -46,6 +49,7 @@ public abstract class EntityRendererMixin implements IResourceManagerReloadListe
             )
     )
     private float redirectGetTemperature(Biome instance, BlockPos blockPos) {
+        if (!SeasonsConfig.isDimensionWhitelisted(this.mc.world.provider.getDimension())) return instance.getTemperature(blockPos);
         return SeasonASMHelper.getFloatTemperature(this.mc.world, instance, blockPos);
     }
 
@@ -57,6 +61,7 @@ public abstract class EntityRendererMixin implements IResourceManagerReloadListe
             )
     )
     public boolean redirectParticlesCanRain(Biome instance) {
+        if (!SeasonsConfig.isDimensionWhitelisted(this.mc.world.provider.getDimension())) return instance.canRain();
         return SeasonASMHelper.shouldAddRainParticles(this.mc.world, instance);
     }
 
@@ -68,6 +73,7 @@ public abstract class EntityRendererMixin implements IResourceManagerReloadListe
             )
     )
     public float redirectParticlesTemperature(Biome instance, BlockPos blockPos) {
+        if (!SeasonsConfig.isDimensionWhitelisted(this.mc.world.provider.getDimension())) return instance.getTemperature(blockPos);
         return SeasonASMHelper.getFloatTemperature(this.mc.world, instance, blockPos);
     }
 }

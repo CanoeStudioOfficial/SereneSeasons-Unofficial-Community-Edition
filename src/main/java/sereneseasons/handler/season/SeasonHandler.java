@@ -26,6 +26,7 @@ import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.config.SeasonsConfig;
+import sereneseasons.core.SereneSeasons;
 import sereneseasons.handler.PacketHandler;
 import sereneseasons.network.message.MessageSyncSeasonCycle;
 import sereneseasons.season.SeasonASMHelper;
@@ -52,7 +53,17 @@ public class SeasonHandler implements SeasonHelper.ISeasonDataProvider
                 
             SeasonSavedData savedData = getSeasonSavedData(world);
 
-            if (++savedData.seasonCycleTicks >= SeasonTime.ZERO.getCycleDuration())
+            // BUG FIX: Get cycle duration and validate it's positive
+            int cycleDuration = SeasonTime.ZERO.getCycleDuration();
+            if (cycleDuration <= 0)
+            {
+                SereneSeasons.logger.warn("Invalid cycle duration: " + cycleDuration + ". Skipping season tick.");
+                return;
+            }
+
+            savedData.seasonCycleTicks++;
+            
+            if (savedData.seasonCycleTicks >= cycleDuration)
             {
                 savedData.seasonCycleTicks = 0;
             }
@@ -60,9 +71,10 @@ public class SeasonHandler implements SeasonHelper.ISeasonDataProvider
             if (savedData.seasonCycleTicks % 20 == 0)
             {
                 sendSeasonUpdate(world);
+                // BUG FIX: Only mark dirty when sending updates (every 1 second) instead of every single tick
+                // This prevents massive disk I/O lag and unnecessary world saves
+                savedData.markDirty();
             }
-
-            savedData.markDirty();
         }
     }
     
@@ -81,6 +93,7 @@ public class SeasonHandler implements SeasonHelper.ISeasonDataProvider
 
     private Season.SubSeason lastSeason = null;
     public static final HashMap<Integer, Integer> clientSeasonCycleTicks = new HashMap<>();
+    
     private static int getClientDimension()
     {
         return Minecraft.getMinecraft().player == null ? 0 : Minecraft.getMinecraft().player.dimension;
@@ -103,8 +116,9 @@ public class SeasonHandler implements SeasonHelper.ISeasonDataProvider
         {
             clientSeasonCycleTicks.compute(dimension, (k, v) -> v == null ? 0 : v + 1);
         	
-            //Keep ticking as we're synchronized with the server only every second
-            if (clientSeasonCycleTicks.get(dimension) >= SeasonTime.ZERO.getCycleDuration())
+            //Keep moving forward since they are only synchronized with the server every second
+            int cycleDuration = SeasonTime.ZERO.getCycleDuration();
+            if (cycleDuration > 0 && clientSeasonCycleTicks.get(dimension) >= cycleDuration)
             {
                 clientSeasonCycleTicks.put(dimension, 0);
             }
@@ -122,27 +136,37 @@ public class SeasonHandler implements SeasonHelper.ISeasonDataProvider
     @SubscribeEvent
     public void onPopulateChunk(PopulateChunkEvent.Populate event)
     {
-        if (event.getWorld().isRemote || event.getType() != PopulateChunkEvent.Populate.EventType.ICE || !SeasonsConfig.isDimensionWhitelisted(event.getWorld().provider.getDimension()))
+        World world = event.getWorld();
+        if (world.isRemote || event.getType() != PopulateChunkEvent.Populate.EventType.ICE || !SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension()))
             return;
 
         event.setResult(Event.Result.DENY);
-        BlockPos blockpos = new BlockPos(event.getChunkX() * 16, 0, event.getChunkZ() * 16).add(8, 0, 8);
+        
+        // BUG FIX / OPTIMIZATION: Cache season state outside the loop to avoid 256 lookups per chunk
+        ISeasonState seasonState = SeasonHelper.getSeasonState(world);
+        
+        int baseX = event.getChunkX() * 16 + 8;
+        int baseZ = event.getChunkZ() * 16 + 8;
+        
+        // OPTIMIZATION: Reusable BlockPos to avoid massive GC pressure during chunk generation
+        BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
         
         for (int k2 = 0; k2 < 16; ++k2)
         {
             for (int j3 = 0; j3 < 16; ++j3)
             {
-                BlockPos blockpos1 = event.getWorld().getPrecipitationHeight(blockpos.add(k2, 0, j3));
+                mutablePos.setPos(baseX + k2, 0, baseZ + j3);
+                BlockPos blockpos1 = world.getPrecipitationHeight(mutablePos);
                 BlockPos blockpos2 = blockpos1.down();
 
-                if (SeasonASMHelper.canBlockFreezeInSeason(event.getWorld(), blockpos2, false, SeasonHelper.getSeasonState(event.getWorld()), true))
+                if (SeasonASMHelper.canBlockFreezeInSeason(world, blockpos2, false, seasonState, true))
                 {
-                    event.getWorld().setBlockState(blockpos2, Blocks.ICE.getDefaultState(), 2);
+                    world.setBlockState(blockpos2, Blocks.ICE.getDefaultState(), 2);
                 }
 
-                if (SeasonASMHelper.canSnowAtInSeason(event.getWorld(), blockpos1, true, SeasonHelper.getSeasonState(event.getWorld()), true))
+                if (SeasonASMHelper.canSnowAtInSeason(world, blockpos1, true, seasonState, true))
                 {
-                    event.getWorld().setBlockState(blockpos1, Blocks.SNOW_LAYER.getDefaultState(), 2);
+                    world.setBlockState(blockpos1, Blocks.SNOW_LAYER.getDefaultState(), 2);
                 }
             }
         }

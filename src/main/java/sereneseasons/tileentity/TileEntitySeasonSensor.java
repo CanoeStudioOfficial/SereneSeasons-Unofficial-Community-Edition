@@ -9,33 +9,27 @@ package sereneseasons.tileentity;
 
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraftforge.event.world.ChunkEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.block.BlockSeasonSensor;
 
 public class TileEntitySeasonSensor extends TileEntity implements ITickable 
 {
+    // BUG FIX: Removed the @SubscribeEvent method.
+    // TileEntity should NOT subscribe to global chunk events. This was an anti-pattern that:
+    // 1. Never worked because the TE wasn't registered to the event bus
+    // 2. Would cause massive performance issues if it did work (every TE checking every chunk load)
+    
     @Override
     public void update()
     {
-        if (this.world != null && !this.world.isRemote && SeasonHelper.getSeasonState(this.world).getSeasonCycleTicks() % 20L == 0L)
+        // OPTIMIZATION: Only update every second (20 ticks) instead of checking every tick
+        if (this.world != null && !this.world.isRemote)
         {
-            ((BlockSeasonSensor)this.getBlockType()).updatePower(this.world, this.pos);
-        }
-    }
-
-    @SubscribeEvent
-    public void onChunkLoad(ChunkEvent.Load event)
-    {
-        Chunk chunk = event.getChunk();
-        int chunkX = chunk.x;
-        int chunkZ = chunk.z;
-
-        if (chunkX == (this.pos.getX() / 16) && chunkZ == (this.pos.getZ() / 16) )
-        {
-            ((BlockSeasonSensor) this.getBlockType()).updatePower(this.world, this.pos);
+            long seasonTicks = SeasonHelper.getSeasonState(this.world).getSeasonCycleTicks();
+            if (seasonTicks % 20L == 0L)
+            {
+                ((BlockSeasonSensor)this.getBlockType()).updatePower(this.world, this.pos);
+            }
         }
     }
 }

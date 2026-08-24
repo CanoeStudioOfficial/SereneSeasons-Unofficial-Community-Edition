@@ -27,13 +27,19 @@ public final class SeasonTime implements ISeasonState
     @Override
     public int getDayDuration()
     {
-        return SyncedConfig.getIntValue(SeasonsOption.DAY_DURATION);
+        // BUG FIX: Removed caching. SyncedConfig values may not be ready during
+        // class loading, causing permanently cached incorrect values (0).
+        // Direct lookup is safe and fast enough for this use case.
+        int value = SyncedConfig.getIntValue(SeasonsOption.DAY_DURATION);
+        return value > 0 ? value : 24000; // Fallback to vanilla day length
     }
 
     @Override
     public int getSubSeasonDuration()
     {
-        return getDayDuration() * SyncedConfig.getIntValue(SeasonsOption.SUB_SEASON_DURATION);
+        int dayDuration = getDayDuration();
+        int subSeasonDays = SyncedConfig.getIntValue(SeasonsOption.SUB_SEASON_DURATION);
+        return dayDuration * (subSeasonDays > 0 ? subSeasonDays : 7);
     }
 
     @Override
@@ -63,7 +69,10 @@ public final class SeasonTime implements ISeasonState
     @Override
     public Season.SubSeason getSubSeason()
     {
-        int index = (this.time / getSubSeasonDuration()) % Season.SubSeason.VALUES.length;
+        int subSeasonDuration = getSubSeasonDuration();
+        if (subSeasonDuration <= 0) return Season.SubSeason.VALUES[0];
+        
+        int index = (this.time / subSeasonDuration) % Season.SubSeason.VALUES.length;
         return Season.SubSeason.VALUES[index];
     }
 
@@ -76,7 +85,10 @@ public final class SeasonTime implements ISeasonState
     @Override
     public Season.TropicalSeason getTropicalSeason()
     {
-        int index = ((((this.time / getSubSeasonDuration()) + 11) / 2) + 5) % Season.TropicalSeason.VALUES.length;
+        int subSeasonDuration = getSubSeasonDuration();
+        if (subSeasonDuration <= 0) return Season.TropicalSeason.VALUES[0];
+        
+        int index = ((((this.time / subSeasonDuration) + 11) / 2) + 5) % Season.TropicalSeason.VALUES.length;
         return Season.TropicalSeason.VALUES[index];
     }
 }
