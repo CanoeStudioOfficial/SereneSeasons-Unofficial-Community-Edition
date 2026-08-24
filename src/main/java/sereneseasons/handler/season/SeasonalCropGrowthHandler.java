@@ -30,7 +30,7 @@ public class SeasonalCropGrowthHandler
 	{
 		Block plant = event.getState().getBlock();
 		boolean isFertile = ModFertility.isCropFertile(plant.getRegistryName().toString(), event.getWorld(), event.getPos());
-		
+
 		if (FertilityConfig.general_category.seasonal_crops && !isFertile && !isGreenhouseGlassAboveBlock(event.getWorld(), event.getPos()))
 		{
 			if (FertilityConfig.general_category.crops_break && !(plant instanceof BlockGrass) && !(plant instanceof BlockReed))
@@ -49,14 +49,14 @@ public class SeasonalCropGrowthHandler
 	{
 		Block plant = event.getBlock().getBlock();
 		boolean isFertile = ModFertility.isCropFertile(plant.getRegistryName().toString(), event.getWorld(), event.getPos());
-		
+
 		if (FertilityConfig.general_category.seasonal_crops && !isFertile && !isGreenhouseGlassAboveBlock(event.getWorld(), event.getPos()))
 		{
 			if (FertilityConfig.general_category.crops_break && !(plant instanceof BlockGrass) && !(plant instanceof BlockReed))
 			{
 				event.getWorld().destroyBlock(event.getPos(), true);
 			}
-			
+
 			event.setCanceled(true);
 		}
 	}
@@ -65,20 +65,20 @@ public class SeasonalCropGrowthHandler
 	{
 		int maxHeight = FertilityConfig.general_category.greenhouse_glass_max_height;
 		int maxY = cropPos.getY() + maxHeight;
-		
-		// OPTIMIZATION: Reusable BlockPos to prevent massive GC pressure during crop growth
+
+
 		BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos(cropPos);
-		
+
 		for (int y = cropPos.getY() + 1; y <= maxY; y++)
 		{
 			mutablePos.setY(y);
-			// OPTIMIZATION: Blocks are singletons, using == is faster and safer than .equals()
+
 			if (world.getBlockState(mutablePos).getBlock() == SSBlocks.greenhouse_glass)
 			{
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
 }

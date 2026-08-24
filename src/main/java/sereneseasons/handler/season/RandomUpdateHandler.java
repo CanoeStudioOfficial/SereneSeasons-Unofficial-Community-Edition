@@ -29,7 +29,6 @@ import java.util.Iterator;
 
 public class RandomUpdateHandler
 {
-	//Randomly melt ice and snow when it isn't winter
 	@SubscribeEvent
 	public void onWorldTick(TickEvent.WorldTickEvent event)
 	{
@@ -44,7 +43,6 @@ public class RandomUpdateHandler
 			Season.SubSeason subSeason = SeasonHelper.getSeasonState(world).getSubSeason();
 			Season season = subSeason.getSeason();
 
-			// OPTIMIZATION: Handle weather changes first, cleanly separated
 			if (ModConfig.seasons.changeWeatherFrequency)
 			{
 				handleWeatherChanges(world, season);
@@ -55,7 +53,6 @@ public class RandomUpdateHandler
 				return;
 			}
 
-			// OPTIMIZATION: Calculate rand threshold once per tick
 			int rand;
 			switch (subSeason)
 			{
@@ -65,37 +62,31 @@ public class RandomUpdateHandler
 				default:           rand = 4;  break;
 			}
 
-			// OPTIMIZATION: Reusable BlockPos to prevent massive GC pressure
 			BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
 
 			for (Iterator<Chunk> iterator = world.getPersistentChunkIterable(world.getPlayerChunkMap().getChunkIterator()); iterator.hasNext();)
 			{
 				Chunk chunk = iterator.next();
-				
-				// BUG FIX: Using world.rand instead of manipulating world.updateLCG which breaks vanilla random ticks
+
 				if (world.rand.nextInt(rand) != 0) continue;
 
 				int x = chunk.x << 4;
 				int z = chunk.z << 4;
 
-				// Use standard random offset for chunk
 				int randOffset = world.rand.nextInt(256);
 				int localX = randOffset & 15;
 				int localZ = (randOffset >> 4) & 15;
 
 				mutablePos.setPos(x + localX, 0, z + localZ);
 				BlockPos precipPos = world.getPrecipitationHeight(mutablePos);
-				
+
 				Biome biome = world.getBiome(precipPos);
 
 				if(!BiomeConfig.enablesSeasonalEffects(biome))
 					continue;
 
 				boolean first = true;
-				
-				// BUG FIX: chunk.getBlockState(int x, int y, int z) expects LOCAL coordinates (0-15).
-				// The original code passed absolute pos.getX(), which read the wrong block or crashed.
-				// We now use world.getBlockState() with absolute coordinates.
+
 				for (int y = precipPos.getY(); y >= 0; y--)
 				{
 					mutablePos.setY(y);
@@ -116,7 +107,6 @@ public class RandomUpdateHandler
 						{
 							if (SeasonASMHelper.getFloatTemperature(world, biome, mutablePos) >= 0.15F)
 							{
-								// BUG FIX: turnIntoWater requires absolute coordinates
 								((BlockIce)Blocks.ICE).turnIntoWater(world, mutablePos);
 								break;
 							}

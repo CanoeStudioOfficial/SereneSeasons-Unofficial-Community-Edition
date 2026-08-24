@@ -1,8 +1,8 @@
 /*******************************************************************************
  * Copyright 2016, the Biomes O' Plenty Team
- * 
+ *
  * This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License.
- * 
+ *
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/.
  ******************************************************************************/
 package sereneseasons.season;
@@ -28,11 +28,11 @@ import javax.annotation.Nullable;
 
 public class SeasonASMHelper
 {
-    ///////////////////
-    // World methods //
-    ///////////////////
 
-    // Legacy
+
+
+
+
     public static boolean canSnowAtInSeason(World world, BlockPos pos, boolean checkLight, @Nullable ISeasonState seasonState)
     {
         return canSnowAtInSeason(world, pos, checkLight, seasonState, false);
@@ -41,16 +41,16 @@ public class SeasonASMHelper
     public static boolean canSnowAtInSeason(World world, BlockPos pos, boolean checkLight, @Nullable ISeasonState seasonState, boolean useUnmodifiedTemperature)
     {
         Biome biome = world.getBiome(pos);
-        
-        // OPTIMIZATION: Early exit if seasonal effects are disabled for this biome
+
+
         if (!BiomeConfig.enablesSeasonalEffects(biome))
         {
             return canSnowAtVanilla(world, pos, checkLight, biome);
         }
-        
-        // OPTIMIZATION: Check dimension whitelist once
+
+
         boolean dimensionWhitelisted = SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension());
-        
+
         float temperature = biome.getTemperature(pos);
 
         if (!useUnmodifiedTemperature && dimensionWhitelisted)
@@ -85,25 +85,25 @@ public class SeasonASMHelper
 
             return false;
         }
-        
+
         return true;
     }
-    
+
     public static boolean canBlockFreezeInSeason(World world, BlockPos pos, boolean noWaterAdj, @Nullable ISeasonState seasonState)
     {
         return canBlockFreezeInSeason(world, pos, noWaterAdj, seasonState, false);
     }
-    
+
     public static boolean canBlockFreezeInSeason(World world, BlockPos pos, boolean noWaterAdj, @Nullable ISeasonState seasonState, boolean useUnmodifiedTemperature)
     {
         Biome biome = world.getBiome(pos);
-        
-        // OPTIMIZATION: Early exit if seasonal effects are disabled
+
+
         if (!BiomeConfig.enablesSeasonalEffects(biome))
         {
             return canBlockFreezeVanilla(world, pos, noWaterAdj, biome);
         }
-        
+
         boolean dimensionWhitelisted = SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension());
         float temperature = biome.getTemperature(pos);
 
@@ -151,7 +151,7 @@ public class SeasonASMHelper
             return false;
         }
     }
-    
+
     public static boolean isRainingAtInSeason(World world, BlockPos pos, ISeasonState seasonState)
     {
         Biome biome = world.getBiome(pos);
@@ -164,10 +164,10 @@ public class SeasonASMHelper
             {
                 case MID_DRY:
                     return false;
-                    
+
                 case MID_WET:
                     return true;
-                    
+
                 default:
                     return biome.canRain();
             }
@@ -180,10 +180,10 @@ public class SeasonASMHelper
 
         return biome.canRain();
     }
-    
-    ///////////////////
-    // Biome methods //
-    ///////////////////
+
+
+
+
 
     public static float getFloatTemperature(World world, Biome biome, BlockPos pos)
     {
@@ -191,7 +191,7 @@ public class SeasonASMHelper
         {
             return biome.getTemperature(pos);
         }
-        
+
         return getFloatTemperature(new SeasonTime(SeasonHelper.getSeasonState(world).getSeasonCycleTicks()).getSubSeason(), biome, pos);
     }
 
@@ -204,38 +204,38 @@ public class SeasonASMHelper
         {
             switch (subSeason)
             {
-                case LATE_SPRING: 
+                case LATE_SPRING:
                 case EARLY_AUTUMN:
                     biomeTemp = MathHelper.clamp(biomeTemp - 0.1F, -0.5F, 2.0F);
                     break;
-                
-                case MID_SPRING: 
+
+                case MID_SPRING:
                 case MID_AUTUMN:
                     biomeTemp = MathHelper.clamp(biomeTemp - 0.2F, -0.5F, 2.0F);
                     break;
-                
-                case EARLY_SPRING: 
+
+                case EARLY_SPRING:
                 case LATE_AUTUMN:
                     biomeTemp = MathHelper.clamp(biomeTemp - 0.4F, -0.5F, 2.0F);
                     break;
-                
-                case EARLY_WINTER: 
-                case MID_WINTER: 
+
+                case EARLY_WINTER:
+                case MID_WINTER:
                 case LATE_WINTER:
                     biomeTemp = MathHelper.clamp(biomeTemp - 0.8F, -0.5F, 2.0F);
                     break;
-                    
+
                 default:
                     break;
             }
         }
-        
+
         return biomeTemp;
     }
 
-    ////////////////////////////
-    // EntityRenderer methods //
-    ////////////////////////////
+
+
+
 
     public static boolean shouldRenderRainSnow(World world, Biome biome)
     {
@@ -247,10 +247,10 @@ public class SeasonASMHelper
             {
                 case MID_DRY:
                     return false;
-                    
+
                 case MID_WET:
                     return true;
-                    
+
                 default:
                     return biome.canRain() || biome.getEnableSnow();
             }
@@ -269,10 +269,10 @@ public class SeasonASMHelper
             {
                 case MID_DRY:
                     return false;
-                    
+
                 case MID_WET:
                     return true;
-                    
+
                 default:
                     return biome.canRain();
             }
@@ -280,13 +280,13 @@ public class SeasonASMHelper
 
         return biome.canRain();
     }
-    
-    // Helper methods for vanilla behavior when seasonal effects are disabled
+
+
     private static boolean canSnowAtVanilla(World world, BlockPos pos, boolean checkLight, Biome biome)
     {
         float temperature = biome.getTemperature(pos);
         if (temperature >= 0.15F) return false;
-        
+
         if (checkLight)
         {
             if (pos.getY() >= 0 && pos.getY() < 256 && world.getLightFor(EnumSkyBlock.BLOCK, pos) < 10)
@@ -298,12 +298,12 @@ public class SeasonASMHelper
         }
         return true;
     }
-    
+
     private static boolean canBlockFreezeVanilla(World world, BlockPos pos, boolean noWaterAdj, Biome biome)
     {
         float temperature = biome.getTemperature(pos);
         if (temperature >= 0.15F) return false;
-        
+
         if (pos.getY() >= 0 && pos.getY() < 256 && world.getLightFor(EnumSkyBlock.BLOCK, pos) < 10)
         {
             IBlockState iblockstate = world.getBlockState(pos);
@@ -312,7 +312,7 @@ public class SeasonASMHelper
             if ((block == Blocks.WATER || block == Blocks.FLOWING_WATER) && iblockstate.getValue(BlockLiquid.LEVEL) == 0)
             {
                 if (!noWaterAdj) return true;
-                
+
                 boolean flag = world.isWater(pos.west()) && world.isWater(pos.east()) && world.isWater(pos.north()) && world.isWater(pos.south());
                 return !flag;
             }

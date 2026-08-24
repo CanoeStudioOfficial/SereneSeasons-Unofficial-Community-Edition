@@ -22,8 +22,6 @@ import java.util.List;
 
 public class SSCommand extends CommandBase
 {
-    // OPTIMIZATION: Cache the sub-season names array statically.
-    // The original code created a new Stream and Array EVERY TIME the player pressed TAB, causing micro-lag.
     private static final String[] SUB_SEASON_NAMES = Arrays.stream(SubSeason.values())
             .map(e -> e.toString().toLowerCase())
             .toArray(String[]::new);
@@ -37,7 +35,6 @@ public class SSCommand extends CommandBase
     @Override
     public List<String> getAliases()
     {
-        // OPTIMIZATION: Use Collections.singletonList instead of Guava's Lists.newArrayList for immutable single-element lists
         return Collections.singletonList("ss");
     }
 
@@ -63,12 +60,12 @@ public class SSCommand extends CommandBase
         else if ("setseason".equals(args[0]))
         {
             setSeason(sender, args);
-        } 
+        }
         else if ("getseason".equals(args[0]))
         {
             getSeason(sender, args);
-        } 
-        else 
+        }
+        else
         {
             sender.sendMessage(new TextComponentTranslation("commands.sereneseasons.usage"));
         }
@@ -88,10 +85,7 @@ public class SSCommand extends CommandBase
         int index = Arrays.asList(SubSeason.VALUES).indexOf(season);
 
         int ticksTillNext;
-        
-        // BUG FIX: The original code set index to -1 if it was 11 (the last sub-season).
-        // This caused the math to evaluate to a NEGATIVE number, showing negative days/hours in chat.
-        // Now it correctly calculates the time remaining until the cycle resets to EARLY_SPRING.
+
         if (index == 11)
         {
             int cycleDuration = subSeasonDuration * 12;
@@ -120,7 +114,6 @@ public class SSCommand extends CommandBase
 
         for (Season.SubSeason season : Season.SubSeason.VALUES)
         {
-            // OPTIMIZATION: Compare lowercase strings without creating new string objects in every iteration
             if (season.toString().toLowerCase().equals(inputSeason))
             {
                 newSeason = season;
@@ -152,13 +145,10 @@ public class SSCommand extends CommandBase
     {
         if (args.length == 1)
         {
-            // BUG FIX: Added "getseason" to tab completions. It existed in the code but wasn't suggested.
             return getListOfStringsMatchingLastWord(args, "setseason", "getseason");
         }
         else if (args.length == 2 && "setseason".equals(args[0]))
         {
-            // BUG FIX: Only suggest sub-seasons if the first argument is "setseason". 
-            // Previously, it suggested them for "getseason" too, which takes no additional arguments.
             return getListOfStringsMatchingLastWord(args, SUB_SEASON_NAMES);
         }
 

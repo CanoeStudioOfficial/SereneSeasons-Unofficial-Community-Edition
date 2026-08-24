@@ -1,8 +1,8 @@
 /*******************************************************************************
  * Copyright 2016, the Biomes O' Plenty Team
- * 
+ *
  * This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License.
- * 
+ *
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/.
  ******************************************************************************/
 package sereneseasons.asm;
@@ -17,8 +17,8 @@ import java.util.Map;
 @IFMLLoadingPlugin.Name("SSLoadingPlugin")
 public class SSLoadingPlugin implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
-    // OPTIMIZATION: Replaced complex Guava ImmutableMap/LinkedHashMap with a simple SingletonList.
-    // We only have one mixin config, so we don't need a Map with Suppliers.
+
+
     private static final List<String> MIXIN_CONFIGS = Collections.singletonList("mixins.sereneseasons.json");
 
     @Override
@@ -28,14 +28,14 @@ public class SSLoadingPlugin implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     @Override
     public boolean shouldMixinConfigQueue(String mixinConfig) {
-        // Since we only have one config and it's always required, we can just return true.
+
         return true;
     }
 
     @Override
     public String[] getASMTransformerClass() {
-        // OPTIMIZATION/BUGFIX: Explicitly return empty array. 
-        // All bytecode modifications are now handled cleanly by Mixins.
+
+
         return new String[0];
     }
 

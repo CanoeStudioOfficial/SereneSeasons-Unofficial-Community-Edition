@@ -14,16 +14,16 @@ import java.util.Map.Entry;
 
 public class BlockStateUtils
 {
-    
-    /**
-     * Utility function for dumping block state info to a string
-     */
+
+
+
+
     public static String getStateInfoAsString(IBlockState state)
     {
         StringBuilder desc = new StringBuilder(state.getBlock().getClass().getName() + "[");
         boolean first = true;
-        
-        // BUG FIX: Added generic types to prevent raw type warnings
+
+
         for (Entry<IProperty<?>, Comparable<?>> entry : state.getProperties().entrySet())
         {
             if (!first) {
@@ -37,39 +37,39 @@ public class BlockStateUtils
         desc.append("]");
         return desc.toString();
     }
-    
-    // Helper method to safely get property name
+
+
     @SuppressWarnings("unchecked")
     private static <T extends Comparable<T>> String getPropertyName(IProperty<T> property, Comparable<?> value)
     {
         return property.getName((T) value);
     }
-    
 
-    /**
-     * Returns a set of states, one for every possible combination of values from the provided properties
-     */
+
+
+
+
     public static ImmutableSet<IBlockState> getStatesSet(IBlockState baseState, IProperty<?>... properties)
     {
-        // OPTIMIZATION: Use ArrayDeque instead of Stack (Stack is synchronized and slower)
+
         Deque<IProperty<?>> propStack = new ArrayDeque<>();
         List<IBlockState> states = new ArrayList<>();
-        
+
         for (IProperty<?> prop : properties) {
             propStack.push(prop);
         }
-        
+
         if (!propStack.isEmpty())
         {
             addStatesToList(baseState, states, propStack);
         }
-        
+
         return ImmutableSet.copyOf(states);
     }
-    
-    /**
-     * Recursively add state values to a list
-     */
+
+
+
+
     @SuppressWarnings("unchecked")
     private static <T extends Comparable<T>> void addStatesToList(IBlockState state, List<IBlockState> list, Deque<IProperty<?>> stack)
     {
@@ -78,63 +78,63 @@ public class BlockStateUtils
             list.add(state);
             return;
         }
-        
+
         IProperty<T> prop = (IProperty<T>) stack.pop();
-        
+
         for (T value : prop.getAllowedValues())
         {
             addStatesToList(state.withProperty(prop, value), list, stack);
         }
-        
+
         stack.push(prop);
     }
-    
-    /**
-     * Return all of the different 'preset' variants of a block.
-     * Works by looping through all the different values of the properties specified in block.getPresetProperties().
-     * Only works on blocks supporting ISSBlock - returns an empty set for vanilla blocks.
-     */
+
+
+
+
+
+
     public static ImmutableSet<IBlockState> getBlockPresets(Block block)
     {
         if (!(block instanceof ISSBlock)) {
             return ImmutableSet.of();
         }
-        
+
         IBlockState defaultState = block.getDefaultState();
         if (defaultState == null) {
             defaultState = block.getBlockState().getBaseState();
         }
-        
+
         return getStatesSet(defaultState, ((ISSBlock) block).getPresetProperties());
     }
-    
-    /**
-     * Discards additional block information to retrieve a state equivalent to those in the inventory
-     */
+
+
+
+
     @SuppressWarnings("unchecked")
     public static IBlockState getPresetState(IBlockState state)
     {
         IBlockState outState = state.getBlock().getDefaultState();
-        
+
         if (state.getBlock() instanceof ISSBlock)
         {
             ISSBlock bopBlock = (ISSBlock) state.getBlock();
-            
+
             for (IProperty property : bopBlock.getPresetProperties())
             {
                 outState = outState.withProperty(property, state.getValue(property));
             }
         }
-        
+
         return outState;
     }
-    
-    /**
-     * Gets a property by name from a block state
-     */
+
+
+
+
     public static IProperty<?> getPropertyByName(IBlockState blockState, String propertyName)
     {
-        // OPTIMIZATION: Removed unnecessary cast to ImmutableSet
+
         for (IProperty<?> property : blockState.getProperties().keySet())
         {
             if (property.getName().equals(propertyName))
@@ -149,12 +149,12 @@ public class BlockStateUtils
         return getPropertyByName(blockState, propertyName) != null;
     }
 
-    /**
-     * Gets a property value by name
-     */
+
+
+
     public static Comparable<?> getPropertyValueByName(IBlockState blockState, IProperty<?> property, String valueName)
     {
-        // OPTIMIZATION: Removed unnecessary cast to ImmutableSet
+
         for (Comparable<?> value : property.getAllowedValues())
         {
             if (value.toString().equals(valueName))

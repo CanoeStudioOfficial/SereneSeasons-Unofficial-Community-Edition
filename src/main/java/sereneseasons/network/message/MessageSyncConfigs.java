@@ -1,8 +1,8 @@
 /*******************************************************************************
  * Copyright 2016, the Biomes O' Plenty Team
- * 
+ *
  * This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Public License.
- * 
+ *
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/.
  ******************************************************************************/
 package sereneseasons.network.message;
@@ -20,22 +20,22 @@ import sereneseasons.core.SereneSeasons;
 public class MessageSyncConfigs implements IMessage, IMessageHandler<MessageSyncConfigs, IMessage>
 {
     public NBTTagCompound nbtOptions;
-    
+
     public MessageSyncConfigs() {}
-    
+
     public MessageSyncConfigs(NBTTagCompound nbtOptions)
     {
         this.nbtOptions = nbtOptions;
     }
-    
+
     @Override
-    public void fromBytes(ByteBuf buf) 
+    public void fromBytes(ByteBuf buf)
     {
         this.nbtOptions = ByteBufUtils.readTag(buf);
     }
 
     @Override
-    public void toBytes(ByteBuf buf) 
+    public void toBytes(ByteBuf buf)
     {
         ByteBufUtils.writeTag(buf, nbtOptions);
     }
@@ -48,7 +48,7 @@ public class MessageSyncConfigs implements IMessage, IMessageHandler<MessageSync
             for (String key : message.nbtOptions.getKeySet())
             {
                 SyncedConfig.SyncedConfigEntry entry = SyncedConfig.optionsToSync.get(key);
-                
+
                 if (entry == null)
                 {
                     SereneSeasons.logger.error("Option " + key + " does not exist locally!");
@@ -60,7 +60,7 @@ public class MessageSyncConfigs implements IMessage, IMessageHandler<MessageSync
 
             SereneSeasons.logger.info("SS configuration synchronized with the server");
         }
-        
+
         return null;
     }
 }

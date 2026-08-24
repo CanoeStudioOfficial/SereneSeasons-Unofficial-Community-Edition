@@ -25,7 +25,7 @@ public class JsonUtil
     {
         File configFile = new File(configDir, configName);
 
-        // No config file, so create default config:
+
         if (!configFile.exists())
         {
             writeFile(configFile, defaults);
@@ -33,7 +33,7 @@ public class JsonUtil
 
         try
         {
-            // BUG FIX: Specify UTF-8 encoding to prevent platform-dependent encoding issues
+
             String jsonContent = FileUtils.readFileToString(configFile, StandardCharsets.UTF_8);
             return SERIALIZER.fromJson(jsonContent, type);
         }
@@ -49,7 +49,7 @@ public class JsonUtil
     {
         try
         {
-            // BUG FIX: Specify UTF-8 encoding to prevent platform-dependent encoding issues
+
             String jsonContent = SERIALIZER.toJson(obj);
             FileUtils.write(outputFile, jsonContent, StandardCharsets.UTF_8);
             return true;

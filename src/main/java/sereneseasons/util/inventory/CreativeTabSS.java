@@ -25,14 +25,14 @@ public class CreativeTabSS extends CreativeTabs
     {
         return new ItemStack(SSItems.ss_icon);
     }
-    
+
     @Override
     @SideOnly(Side.CLIENT)
     public void displayAllRelevantItems(NonNullList<ItemStack> itemList)
     {
         super.displayAllRelevantItems(itemList);
-        
-        // Add spawn eggs for entities from this mod
+
+
         for (EntityList.EntityEggInfo eggInfo : EntityList.ENTITY_EGGS.values())
         {
             if (eggInfo.spawnedID.getNamespace().equals(SereneSeasons.MOD_ID))
