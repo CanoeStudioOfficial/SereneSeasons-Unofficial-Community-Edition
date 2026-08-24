@@ -36,6 +36,11 @@ public class RandomUpdateHandler
 		if (event.phase == Phase.END && event.side == Side.SERVER)
 		{
 			WorldServer world = (WorldServer) event.world;
+			if (!SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension()))
+			{
+				return;
+			}
+
 			Season.SubSeason subSeason = SeasonHelper.getSeasonState(world).getSubSeason();
 			Season season = subSeason.getSeason();
 
@@ -45,7 +50,7 @@ public class RandomUpdateHandler
 				handleWeatherChanges(world, season);
 			}
 
-			if (season == Season.WINTER || !SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension()))
+			if (season == Season.WINTER)
 			{
 				return;
 			}

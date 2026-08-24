@@ -48,17 +48,20 @@ public class ModFertility
 
 	public static boolean isCropFertile(String cropName, World world, BlockPos pos)
 	{
-		// OPTIMIZATION: Fail-fast. Check global config and dimension before doing expensive biome/season lookups
-		if (!FertilityConfig.general_category.seasonal_crops || !SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension()))
-		{
-			return true;
-		}
-
 		Biome biome = world.getBiome(pos);
 		
-		if (BiomeConfig.disablesCrops(biome) || !BiomeConfig.enablesSeasonalEffects(biome))
+		// A biome-specific crop disable must override the global and dimension settings.
+		if (BiomeConfig.disablesCrops(biome))
 		{
 			return false;
+		}
+
+		// Seasonal crop checks are disabled outside whitelisted dimensions or biomes.
+		if (!FertilityConfig.general_category.seasonal_crops
+				|| !SeasonsConfig.isDimensionWhitelisted(world.provider.getDimension())
+				|| !BiomeConfig.enablesSeasonalEffects(biome))
+		{
+			return true;
 		}
 		
 		if (BiomeConfig.usesTropicalSeasons(biome))

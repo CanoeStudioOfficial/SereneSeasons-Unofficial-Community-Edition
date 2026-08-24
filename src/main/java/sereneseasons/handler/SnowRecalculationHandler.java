@@ -3,6 +3,7 @@ package sereneseasons.handler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
@@ -97,8 +98,8 @@ public class SnowRecalculationHandler {
         int currentTime = (int) (System.currentTimeMillis() / 1000 / 60);
         
         for (EntityPlayer player : world.playerEntities) {
-            int playerChunkX = (int) player.posX / 16;
-            int playerChunkZ = (int) player.posZ / 16;
+            int playerChunkX = MathHelper.floor(player.posX / 16.0D);
+            int playerChunkZ = MathHelper.floor(player.posZ / 16.0D);
             long currentChunkKey = (((long) playerChunkX) << 32) | (playerChunkZ & 0xFFFFFFFFL);
             
             String playerName = player.getName();
@@ -218,8 +219,8 @@ public class SnowRecalculationHandler {
         
         // Force recalculation around player spawn
         int currentTime = (int) (System.currentTimeMillis() / 1000 / 60);
-        int playerChunkX = (int) player.posX / 16;
-        int playerChunkZ = (int) player.posZ / 16;
+        int playerChunkX = MathHelper.floor(player.posX / 16.0D);
+        int playerChunkZ = MathHelper.floor(player.posZ / 16.0D);
         
         scheduleChunksAroundPlayer(world, playerChunkX, playerChunkZ, currentTime);
     }

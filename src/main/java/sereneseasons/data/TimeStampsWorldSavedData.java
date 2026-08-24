@@ -51,16 +51,58 @@ public class TimeStampsWorldSavedData extends WorldSavedData {
     @Override
     public void readFromNBT(NBTTagCompound nbt) {
         timeStampMap.clear();
+        boolean migratedLegacyKey = false;
         for (String key : nbt.getKeySet()) {
             // 99 is the NBT Tag ID for Integer
             if (nbt.hasKey(key, 99)) { 
-                try {
-                    long longKey = Long.parseLong(key);
-                    timeStampMap.put(longKey, nbt.getInteger(key));
-                } catch (NumberFormatException e) {
-                    // Safely ignore malformed keys from older versions (like "[x, z]" strings)
+                Long chunkKey = parseChunkKey(key);
+                if (chunkKey != null) {
+                    if (!isLongKey(key)) {
+                        migratedLegacyKey = true;
+                    }
+                    timeStampMap.put(chunkKey, nbt.getInteger(key));
                 }
             }
+        }
+
+        // Persist converted keys during the next world save instead of leaving the
+        // old string representation in the save indefinitely.
+        if (migratedLegacyKey) {
+            markDirty();
+        }
+    }
+
+    private static Long parseChunkKey(String key) {
+        try {
+            return Long.parseLong(key);
+        } catch (NumberFormatException ignored) {
+            // Continue with the legacy ChunkPos.toString() format: "[x, z]".
+        }
+
+        if (key.length() < 5 || key.charAt(0) != '[' || key.charAt(key.length() - 1) != ']') {
+            return null;
+        }
+
+        String[] coordinates = key.substring(1, key.length() - 1).split(",");
+        if (coordinates.length != 2) {
+            return null;
+        }
+
+        try {
+            int x = Integer.parseInt(coordinates[0].trim());
+            int z = Integer.parseInt(coordinates[1].trim());
+            return ChunkPos.asLong(x, z);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private static boolean isLongKey(String key) {
+        try {
+            Long.parseLong(key);
+            return true;
+        } catch (NumberFormatException ignored) {
+            return false;
         }
     }
 
