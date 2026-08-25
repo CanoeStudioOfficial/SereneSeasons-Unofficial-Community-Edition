@@ -111,4 +111,11 @@ public class TimeStampsWorldSavedData extends WorldSavedData {
         }
         return instance;
     }
+
+    public static void clearChunkTimeStamp(Chunk chunk) {
+        TimeStampsWorldSavedData data = get(chunk.getWorld());
+        long key = ChunkPos.asLong(chunk.x, chunk.z);
+        data.timeStampMap.remove(key);
+        data.markDirty();
+    }
 }
