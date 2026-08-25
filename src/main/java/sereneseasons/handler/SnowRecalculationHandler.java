@@ -28,9 +28,7 @@ import java.util.Map;
 public class SnowRecalculationHandler {
 
     private static final Deque<Chunk> recalculationQueue = new ArrayDeque<>();
-
     private static final Map<String, Long> playerLastChunkPos = new HashMap<>();
-
     private static int recalculationCooldown = 0;
     private static final int RECALCULATION_INTERVAL = 200;
 
@@ -61,7 +59,6 @@ public class SnowRecalculationHandler {
 
         int processed = 0;
         SubSeason subSeason = SeasonHelper.getSeasonState(world).getSubSeason();
-        int currentTime = (int) (System.currentTimeMillis() / 1000 / 60);
 
         while (!recalculationQueue.isEmpty() && processed < 20) {
             Chunk chunk = recalculationQueue.poll();
@@ -74,7 +71,7 @@ public class SnowRecalculationHandler {
 
             if (success) {
                 processed++;
-                TimeStampsWorldSavedData.setChunkTimeStamp(chunk, currentTime);
+                TimeStampsWorldSavedData.clearChunkTimeStamp(chunk);
             } else {
                 recalculationQueue.offer(chunk);
             }
@@ -94,7 +91,6 @@ public class SnowRecalculationHandler {
 
             if (lastChunkKey == null || lastChunkKey != currentChunkKey) {
                 playerLastChunkPos.put(playerName, currentChunkKey);
-
                 scheduleChunksAroundPlayer(world, playerChunkX, playerChunkZ, currentTime);
             }
         }
@@ -115,9 +111,13 @@ public class SnowRecalculationHandler {
                 Chunk chunk = world.getChunkProvider().getLoadedChunk(chunkX, chunkZ);
 
                 if (chunk != null && chunk.isLoaded() && chunk.isPopulated()) {
-                    int savedTime = TimeStampsWorldSavedData.getChunkTimeStamp(chunk);
+                    int unloadTime = TimeStampsWorldSavedData.getChunkTimeStamp(chunk);
 
-                    if (currentTime - savedTime > FertilityConfig.general_category.timeToRecalculateSnow) {
+                    if (unloadTime == 0) {
+                        if (!recalculationQueue.contains(chunk)) {
+                            recalculationQueue.offer(chunk);
+                        }
+                    } else if (unloadTime > 0 && currentTime - unloadTime > FertilityConfig.general_category.timeToRecalculateSnow) {
                         if (!recalculationQueue.contains(chunk)) {
                             recalculationQueue.offer(chunk);
                         }
@@ -173,16 +173,20 @@ public class SnowRecalculationHandler {
 
         Chunk chunk = event.getChunk();
         int currentTime = (int) (System.currentTimeMillis() / 1000 / 60);
-        int savedTime = TimeStampsWorldSavedData.getChunkTimeStamp(chunk);
+        int unloadTime = TimeStampsWorldSavedData.getChunkTimeStamp(chunk);
 
-        if (currentTime - savedTime > FertilityConfig.general_category.timeToRecalculateSnow) {
+        if (unloadTime == 0) {
+            // New chunk, recalculate immediately on first load
+            recalculationQueue.offer(chunk);
+        } else if (unloadTime > 0 && currentTime - unloadTime > FertilityConfig.general_category.timeToRecalculateSnow) {
+            // Unloaded chunk, recalculate if enough time has passed
             recalculationQueue.offer(chunk);
         }
     }
 
     @SubscribeEvent
     public void playerJoinedWorld(PlayerEvent.PlayerLoggedInEvent event) {
-        if(!FertilityConfig.general_category.shouldRecalculateSnow) {
+        if (!FertilityConfig.general_category.shouldRecalculateSnow) {
             return;
         }
         EntityPlayer player = event.player;
@@ -207,12 +211,14 @@ public class SnowRecalculationHandler {
 
         Chunk chunk = event.getChunk();
         removeFromRecalculationQueue(chunk);
+
+        int currentTime = (int) (System.currentTimeMillis() / 1000 / 60);
+        TimeStampsWorldSavedData.setChunkTimeStamp(chunk, currentTime);
     }
 
     @SubscribeEvent
     public void playerLeftWorld(PlayerEvent.PlayerLoggedOutEvent event) {
         EntityPlayer player = event.player;
-
         playerLastChunkPos.remove(player.getName());
     }
 
